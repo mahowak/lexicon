@@ -72,7 +72,7 @@ def read_in_celex_lines(path):
 
 def get_celex_monos(path, language):
     """ Return list of celex ids for monomorphemes. """
-    a = read_in_celex_lines(user_celex_path + "%s/eml/eml.cd" %language)
+    a = read_in_celex_lines(user_celex_path + language + "/{lang}ml/{lang}ml.cd".format(lang=language[0]))
     return [i[0] for i in a if i[3] == "M"]
 
 def get_celex_path(path, lemma, language):
