@@ -1,10 +1,5 @@
-lexicon
-=======
-
-lexicon project repo
-
 -model.py
-main file for making different files
+main file for adding and implementing different models
 currently implemented:
 ngrams
 
@@ -18,4 +13,5 @@ input lex file in format and output lexical stats in rfiles
 1,simword1
 
 -celex.py
-input arguments, output celex file in folder celexes
+input arguments, output celex file in folder celexes (one word per line)
+v
