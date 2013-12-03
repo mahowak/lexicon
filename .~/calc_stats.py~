@@ -1,0 +1,40 @@
+def write_lex_stats(b, num):
+    """Use Levenshtein package to calcualte lev and count up mps, neighbors, etc"""
+    total = 0.
+    mps = 0
+    neighbors = 0
+    homophones = 0
+    lev_total = 0
+    ndict = nltk.defaultdict(int)
+    mdict = nltk.defaultdict(int)
+    hdict = nltk.defaultdict(int)
+    for item in itertools.combinations(b, 2):
+        lev = Levenshtein.distance(item[0], item[1])
+        if lev == 0: 
+            homophones += 1
+            hdict[item[0]] += 1
+        elif lev == 1: 
+            neighbors += 1
+            ndict[item[0]] += 1
+            ndict[item[1]] += 1
+            if len(item[0]) == len(item[1]): 
+                mps += 1
+                mdict[item[0]] += 1
+                mdict[item[1]] += 1
+        total += 1
+        lev_total += lev
+    print str(num)
+    f.write(",".join([str(x) for x in [num, homophones, mps, neighbors, lev_total/total, len(b)] ]) + "\n")
+    for item in b:
+        f2.write(",".join([str(num), str(item), str(hdict[item]), str(mdict[item]/(hdict[item] + 1.)), str(ndict[item]/(hdict[item] + 1.)), str(len(item)) ]) + "\n")
+    return
+
+
+    inputlist = nltk.defaultdict(list)
+    b = [line.strip().split(",") for line in open(args.inputsim).readlines()]
+    b = [line for line in b if len(line[1]) >= args.minlength and len(line[1]) <= args.maxlength]
+    for item in b: #divide up lexicons
+        inputlist[int(item[0])] += [item[1]]
+    write_lex_stats(inputlist[-1], "real")
+    for i in range(0, max(inputlist.keys()) + 1):
+        write_lex_stats(inputlist[i], i)
