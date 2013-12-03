@@ -14,4 +14,3 @@ input lex file in format and output lexical stats in rfiles
 
 -celex.py
 input arguments, output celex file in folder celexes (one word per line)
-v
