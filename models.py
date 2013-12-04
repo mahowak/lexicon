@@ -53,7 +53,7 @@ class NgramModel():
         self.cfd = ConditionalFreqDist()
         self.update_cfd(self.n, self.corpus)
         self.cpd_unsmooth = ConditionalProbDist(self.cfd, nltk.MLEProbDist)
-        self.cpd_smooth = ConditionalProbDist(self.cfd, nltk.LaplaceProbDist, len(self.cfd))#issue with SimpleGoodTuringProbDist but also with other smoothing functions
+        #self.cpd_smooth = ConditionalProbDist(self.cfd, nltk.LaplaceProbDist, len(self.cfd))#issue with SimpleGoodTuringProbDist but also with other smoothing functions
 
 
     def update_cfd(self, n, corpus):
@@ -80,37 +80,40 @@ class NgramModel():
         return words
     
     def evaluate(self, word):
-        """ get the probability of generating a given word under the language model """
+        """ get the log probability of generating a given word under the language model """
         word = [i for i in word] + ["<E>"]
         fifo = ["<S>"]*(self.n -1)
         p_gram=0
         for ch in word:
             context = "".join(fifo[(len(fifo) - (self.n - 1)):len(fifo)])
-            p_gram += log(self.cpd_unsmooth[context].prob(ch)) 
+            try:
+                p_gram += log(self.cpd_unsmooth[context].prob(ch)) 
+            except ValueError:
+                return 0.0
             fifo.append(ch)
-        return p_gram
+        return p_gram 
                                                             
                                                          
-    def entropy(self, corpus):
+    def entropy_avg(self, corpus):
         """Calculate the estimated entropy of the n-gram model for a given lexicon"""
         e = 0.0
         for i in range(self.n -1, len(corpus)):
             context = tuple(corpus[i-self.n+1:i])
             token = corpus[i]
-            e += self.evaluate(token)
-        return e / float(len(corpus) - (self.n-1))
+            e += -self.evaluate(token)
+        return e / float(len(corpus))
 
 
     def perplexity(self, corpus):
         """Calculates the perplexity of the given lexicon. ( 2 ** entropy)"""
-        return pow(2.0, self.entropy(corpus))
+        return pow(2.0, self.entropy_avg(corpus))
     
 
 """ --------------pcfg model------------"""
 
 def format_grammar(f):
  	print ">>> Loading cfg counts ..."
- 	f_out = open("grammar_formated.txt", 'w')
+ 	f_out = open("grammars/grammar_formated.txt", 'w')
 	gram = collections.defaultdict(lambda: collections.defaultdict(int))
 	tot = collections.defaultdict(int)
 	for line in f:
@@ -153,9 +156,10 @@ def weighted_choice(weights):
 
             
 class PCFG(object):
-    def __init__(self, ngen):
+    def __init__(self, ngen, ngram = None):
     	self.__dict__.update(locals())
         self.prod = collections.defaultdict(list)
+        self.reject = 0
 
     def add_prod(self, lhs, rhs):
         """ Add production to the grammar. 'rhs' can
@@ -173,7 +177,7 @@ class PCFG(object):
         	
     def generate(self):
         """Generate as many words as specified by ngen"""
-        words = [self.generate_one(symbol='Word') for xx in range(self.ngen)]
+        words = [self.filter_word() for xx in range(self.ngen)]
         return words
         
     def generate_one(self, symbol='Word'):
@@ -194,8 +198,17 @@ class PCFG(object):
         	else:
         		word += sym 
         return word
+
+    def filter_word(self):
+        word = self.generate_one(symbol='Word')
+        if self.ngram != None:
+            while self.ngram.evaluate(word)==0:
+                word = self.generate_one(symbol='Word')
+                self.reject +=1
+        return word
+        
 	
-    def entropy(self, corpus): #TODO
+    def entropy_avg(self, corpus): #TODO
         return 0.0
 
 
@@ -243,7 +256,7 @@ parser.add_argument('--syll', metavar='--syll', type=int, nargs='?',
 parser.add_argument('--cv', metavar='--cv', type=int, nargs='?',
                     help='put 1 here to match for CV pattern', default=0)
 parser.add_argument('--grammar', metavar='--g', type=str, nargs='?',
-	                    help='grammar file for pcfg', default="grammar.wlt")
+	                    help='grammar file for pcfg', default="grammars/grammar_mono.wlt")
 
 
 args = parser.parse_args()
@@ -251,15 +264,15 @@ args = parser.parse_args()
 def write_lex_file(corpus, cv, iter, model, n, homo):
     corpus = [i.strip() for i in open(args.corpus, "r").readlines()]
     outfile  = open("Lexicons/lex_" + args.corpus.split("/")[-1][:-4] + "_cv" +  str(args.cv) + "_iter" + str(args.iter) + "_m" + args.model + ".txt", "w")
-
+    print model, len(corpus)
     if model == "nphone":#TO COMPLETE once other models will been defined
         lm = NgramModel(n, corpus, 1, homo)
     elif model == "pcfg":
     	g = open(args.grammar, 'r')
         format_grammar(g)
         g.close()
-        lm =PCFG(10)
-        g = open("grammar_formated.txt", 'r')
+        lm =PCFG(1, NgramModel(n, corpus, 1, homo))
+        g = open("grammars/grammar_formated.txt", 'r')
         for line in g:
             line.rstrip('\n')
             A, B = line.split("\t")
@@ -267,12 +280,12 @@ def write_lex_file(corpus, cv, iter, model, n, homo):
 	    	
     for r in corpus:
         outfile.write("-1," + r + "\n")
-    print "lexicon: ", lm.entropy(corpus) # /!\ need an entropy function in the class model of the lm
+    print "lexicon: ", lm.entropy_avg(corpus) # /!\ need an entropy function in the class model of the lm
     for i in range(args.iter):
         gen_lex= generate_correct_number(args.n, corpus, args.homo, lm)
         for w in enumerate(gen_lex):
             outfile.write(str(i) + "," +  w[1] + "\n")
-        print "generated lexicon: ", str(i), lm.entropy(gen_lex) # /!\ need an entropy function in the class model of the lm
+        print "generated lexicon: ", str(i), lm.entropy_avg(gen_lex)# /!\ need an entropy function in the class model of the lm
     outfile.close()
     return
 

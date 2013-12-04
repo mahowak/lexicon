@@ -43,7 +43,6 @@ def write_lex_stats(b, num, f, f2):
                 mdict[item[1]] += 1
         total += 1
         lev_total += lev
-    print str(num)
     f.write(",".join([str(x) for x in [num, homophones, mps, neighbors, lev_total/total, len(b)] ]) + "\n")
     for item in b:
         f2.write(",".join([str(num), str(item), str(hdict[item]), str(mdict[item]/(hdict[item] + 1.)), str(ndict[item]/(hdict[item] + 1.)), str(len(item)) ]) + "\n")
