@@ -53,7 +53,7 @@ class NgramModel():
         self.cfd = ConditionalFreqDist()
         self.update_cfd(self.n, self.corpus)
         self.cpd_unsmooth = ConditionalProbDist(self.cfd, nltk.MLEProbDist)
-#        self.cpd_smooth = ConditionalProbDist(self.cfd, nltk.LaplaceProbDist, len(self.cfd))#issue with SimpleGoodTuringProbDist but also with other smoothing functions, does not work as is for n = 1
+        self.cpd_smooth = ConditionalProbDist(self.cfd, nltk.LaplaceProbDist, 42)#issue with SimpleGoodTuringProbDist but also with other smoothing functions, does not work as is for n = 1
 
 
     def update_cfd(self, n, corpus):
@@ -98,7 +98,7 @@ class NgramModel():
         """Calculate the estimated entropy of the n-gram model for a given lexicon"""
         p = 0.0
         for i in corpus:
-            p += -self.evaluate(i)
+            p += self.evaluate(i)
         return p / float(len(corpus))
 
 
@@ -110,7 +110,7 @@ class NsyllModel():
         self.cfd = ConditionalFreqDist()
         self.update_cfd_syll(self.n, self.corpus)
         self.cpd_unsmooth = ConditionalProbDist(self.cfd, nltk.MLEProbDist)
-#        self.cpd_smooth = ConditionalProbDist(self.cfd, nltk.LaplaceProbDist, len(self.cfd))#issue with SimpleGoodTuringProbDist but also with other smoothing functions, does not work as is for n = 1
+        self.cpd_smooth = ConditionalProbDist(self.cfd, nltk.LaplaceProbDist,3312 )#issue with SimpleGoodTuringProbDist but also with other smoothing functions, does not work as is for n = 1
 
 
     def update_cfd_syll(self, n, corpus):
@@ -155,7 +155,7 @@ class NsyllModel():
         """Calculate the average probability of a word under the model"""
         p = 0.0
         for i in corpus:
-            p += -self.evaluate(i)
+            p += self.evaluate(i)
         return p / float(len(corpus))
 
 
@@ -271,7 +271,7 @@ class PCFG(object):
         p = 0.0
         for item in corpus:
 #            print self.p_word[item], self.ngram.evaluate(item)
-            p += -self.p_word[item]
+            p += self.p_word[item]
         return p /float(len(corpus))
 
 
@@ -287,28 +287,82 @@ def generate_correct_number(n, corpus, homo, x):
         lengths_needed[get_cv(item)] += 1
     newwords = []
     exist =0
+    hom =0
     while True:
         words = x.generate()
         for w in words:
             if lengths_needed[get_cv(w)] > 0:
                 if homo == 1 or w not in newwords:
+                    if w in newwords:
+                        hom += 1
                     lengths_needed[get_cv(w)] += -1
-#                    if sum([lengths_needed[j] for j in lengths_needed.keys()]) %1000 == 0:
-#                        print sum([lengths_needed[j] for j in lengths_needed.keys()])
                     newwords += [w]
                     if w in corpus:
                         exist +=1
             elif sum([lengths_needed[j] for j in lengths_needed.keys()]) == 0: 
-                print "nb of real words", exist
+                print "nb of real words", exist, "| nb of homophones", hom
                 return newwords
 
 
+def generate_pool(lm, argslist, nb=5000000, homo =1): # /!\ generate 5,000,000 words with homophones
+    """Generate nb words using the language model lm considered"""
+    pool_f = open("pool/pool_" + argslist + ".txt", "w")    
+    pool=[]
+    while len(pool) < nb:
+        words = lm.generate()
+        for w in words:
+            if homo == 1 or w not in pool:
+               pool_f.write(",".join([str(x) for x in [len(w), w, lm.evaluate(w)]]) + "\n")
+               pool += [w]
+               
+def get_range(d, begin, end):
+    return dict([ (k,v) for (k,v) in d.iteritems() if v >= begin and v <= end ])
 
-def write_lex_file(corpus, cv, iter, model, n, homo):
+
+def generate_correct_number_pool(n, corpus, homo, pool, eps = 1e-6):
+    """Generate number of words to match length and p(word) from ngram model using a pool a pre-generated word"""
+    x = NgramModel(n, corpus, 1, homo)
+    poolxLengths = nltk.defaultdict(list)
+    poolxP = nltk.defaultdict(float)
+
+    for item in pool:
+    	item = item.strip().split(",")
+    	poolxLengths[int(item[0])].append(item[1])
+    	poolxP[item[1]] = float(item[2])
+	
+    same_length = nltk.defaultdict(int)
+    for i in range(20):
+    	same_length[i] = dict([(k, poolxP[k]) for k in poolxLengths[i] if k in poolxP])
+    newwords = []
+    exist =0
+    hom_count =0
+    tot_p=0
+    for i, w in enumerate(corpus):
+        p_match = x.evaluate(w)
+        sample = get_range(same_length[len(w)], p_match-eps, p_match+eps)
+        while len(sample) == 0:
+        	eps = eps*2
+        	sample = get_range(same_length[len(w)], p_match-eps, p_match+eps)
+        eps = 1e-6
+        nw = random.choice(sample.keys())
+        while nw in newwords and homo !=1:
+            nw = random.choice(sample.keys())
+        if nw in corpus:
+            exist +=1
+        if nw in newwords:
+            hom_count +=1
+        del same_length[len(w)][nw]
+        tot_p += poolxP[nw] + log(1/float(len(sample)))
+    	newwords += [nw]      
+    print "true avg P(word):", tot_p/len(newwords)
+    return newwords
+
+
+def write_lex_file(corpus, cv, iter, model, n, homo, pool = None):
     corpus = [i.strip() for i in open(args.corpus, "r").readlines()]
     outfile  = open("Lexicons/lex_" + args.corpus.split("/")[-1][:-4] + "_cv" +  str(args.cv) + "_iter" + str(args.iter) + "_m" + args.model + ".txt", "w")
     print model, len(corpus)
-    if model == "nphone":#TO COMPLETE once other models will been defined
+    if model == "nphone" or model == "npool":#TO COMPLETE once other models will been defined
         lm = NgramModel(n, corpus, 1, homo)
     elif model == "nsyll":
         lm = NsyllModel(n, corpus, 1, homo)
@@ -325,12 +379,15 @@ def write_lex_file(corpus, cv, iter, model, n, homo):
 	    	
     for r in corpus:
         outfile.write("-1," + re.sub("-","",r) + "\n")
-    print "lexicon: ", lm.pword_avg(corpus) # /!\ need an entropy function in the class model of the lm
+    print "lexicon: ", lm.pword_avg(corpus) # /!\ need function pword_avg in the class model of the lm
     for i in range(args.iter):
-        gen_lex= generate_correct_number(args.n, corpus, args.homo, lm)
+    	if model == "npool":
+    		gen_lex= generate_correct_number_pool(args.n, corpus, args.homo, pool)
+    	else:
+        	gen_lex= generate_correct_number(args.n, corpus, args.homo, lm)
         for w in enumerate(gen_lex):
             outfile.write(str(i) + "," +  re.sub("-","",w[1]) + "\n")
-        print "generated lexicon: ", str(i), lm.pword_avg(gen_lex)# /!\ need an entropy function in the class model of the lm
+        print "generated lexicon: ", str(i), lm.pword_avg(gen_lex)# /!\ need function pword_avg in the class model of the lm
     outfile.close()
     return
 
@@ -346,7 +403,11 @@ def evaluate_model(corpus, iter, model, n, homo, train_frac):#TO DO: create a fi
         test_corpus = random.sample(corpus, int((1-train_frac)*len(corpus)))
         if model == "nphone":#TO COMPLETE once other models will been defined
             lm = NgramModel(n, train_corpus, 1, homo)
-	    print iter, str(model) + " evaluation based on " + str(train_frac) + " of corpus:", lm.entropy_avg(test_corpus), lm.perplexity(test_corpus)
+            lm_all = NgramModel(n, corpus, 1, homo)
+        elif model == "nsyll":
+            lm = NsyllModel(n, train_corpus, 1, homo)
+            lm_all = NsyllModel(n, corpus, 1, homo)
+        print i, str(model) + " evaluation based on " + str(train_frac) + " of corpus:", lm.pword_avg(test_corpus), "| on 100% of corpus:", lm_all.pword_avg(test_corpus)
 
 
 """ --------------main------------"""
@@ -381,11 +442,27 @@ parser.add_argument('--fnc', metavar='--f', type=str, nargs='?',
                      help='evaluate/generate corpus', default="generate")
 parser.add_argument('--train', metavar='--t', type=float, nargs='?',
                       help='fraction of corpus use for training', default=0.75)
+parser.add_argument('--pool', metavar='--p', type=str, nargs='?',
+                    help='pool of words', default='pool')   
+                     
 
 args = parser.parse_args()
+pool=""
 
+if args.model == "npool":
+	try:
+		pool = open("pool/pool_"+ args.corpus.split("/")[-1][:-4] + "_m" + args.model + ".txt", "r").readlines()
+		pool = [i.strip() for i in pool]
+		print "rfiles/"+ args.pool + ".txt"
+	except IOError:
+		x = NgramModel(args.n, [i.strip() for i in open(args.corpus, "r").readlines()], 1, args.homo)
+		generate_pool(x, args.corpus.split("/")[-1][:-4] + "_m" + args.model)
+		pool = open("pool/pool_"+ args.corpus.split("/")[-1][:-4] + "_m" + args.model + ".txt", "r").readlines()
+		pool = [i.strip() for i in pool]
+	
+	
 if args.fnc == "generate":
-    write_lex_file(args.corpus, args.cv, args.iter, args.model, args.n, args.homo)
-else: #evaluate /!\ works only with ngrams as now
+    write_lex_file(args.corpus, args.cv, args.iter, args.model, args.n, args.homo, pool)
+else: #evaluate /!\ works only with ngrams and nsyll as now
     evaluate_model(args.corpus, args.iter, args.model, args.n, args.homo, args.train)
 #python ngram.py --inputsim=permuted_syllssyll__lemma_english_nphone_1_0_4_8.txt --corpus=notcelex
