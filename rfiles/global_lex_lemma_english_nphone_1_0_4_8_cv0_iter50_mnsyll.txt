@@ -1,0 +1,1 @@
+lexicon,homophones,mps,neighbors,avg_lev,num_words
