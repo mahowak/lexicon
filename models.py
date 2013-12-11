@@ -1,5 +1,5 @@
 from nltk import *
-import random, sys, re
+import random, sys, re, os
 import nltk
 import argparse
 import itertools
@@ -10,12 +10,24 @@ t = time.time()
 import random, sys, re
 from math import log, sqrt, exp 
 import collections
+from scipy.spatial import cKDTree as kd
+from convert_to_disc import *
+from convert_to_blick import *
+from calc_stats import *
+from blick import BlickLoader
+b = BlickLoader()
+
+
 
 try:
     os.mkdir('Lexicons')
 except OSError:
     pass
 
+try:
+    os.mkdir('matchedLexica')
+except OSError:
+    pass
 
 vowels = {}
 for v in "IE{VQU@i#$u312456789cq0~iI1!eE2@aAoO3#4$6^uU7&5+8*9(0)<>[]{}":
@@ -275,6 +287,111 @@ class PCFG(object):
         return p /float(len(corpus))
 
 
+""" --------------match from big set of words------------"""
+
+def write_row_of_bigmatch(discword, disc, outfile, x, real, T):
+    if disc == 0: blickword = convert_to_blick(discword)
+    if disc == 0:
+        outfile.write(",".join([blickword, str(b.assessWord(blickword)), str(x.evaluate(discword)), real, T, discword]) + "\n")
+    else:
+        outfile.write(",".join(["N", str(0), str(x.evaluate(discword)), real, T, discword]) + "\n")
+    return
+
+
+class BigMatch():
+    """
+    Generate 10 million words and match to real lexicon
+    according to ngram, blick, or both.
+    """
+    
+    def __init__(self, n, corpus, homo, match, fn):
+        self.__dict__.update(locals())
+        self.wordlist = {}
+        self.disc = 0
+        self.make_words()
+        self.match_from_biglist(self.bigfn, args.cv, args.iter, self.match)
+
+    def make_words(self):
+        """Generate 10 million words only if file does not exist already.
+        Save to the corpus name with _tomatch inserted before .txt
+        """
+        if " " in self.corpus[0] and " " in self.corpus[1]: 
+            print "assuming BLICK"
+            self.corpus = [convert_to_disc(i) for i in self.corpus]
+        else:
+            self.disc = 1
+            print "assuming Disc"
+        self.bigfn = args.corpus[:-4] + "_tomatch.txt"
+        if not os.path.isfile(self.bigfn):  ##check if it already exists
+            print "generating 10 million words"
+            outfile = open(self.bigfn, "w")
+            outfile.write("word,blick,ngram,Real,T,disc\n")
+            x = NgramModel(self.n, self.corpus, 100, self.homo)
+            for word in self.corpus:
+                write_row_of_bigmatch(word, self.disc, outfile, x, "Real", "1")
+            for i in range(100000):
+                for word in x.generate():
+                    if word not in self.wordlist and len(word) < 9: #keep only words less than len9
+                        write_row_of_bigmatch(word, self.disc, outfile, x, "Simulated", "0")
+                        self.wordlist[word] = 0
+        return
+
+    def handle_blick_disc(self, word):
+        if self.disc == 1: return word
+        else: return convert_to_disc(word)
+
+    def match_loop(self, outfile, outfile2, realpoints, realword, realblick, realngram, fff, cv, iter, minpoint, blick, ngram, word, tree):
+        """Iterate through real lexicon points and do matching"""
+        for rpnum, rp in enumerate(realpoints): ###write real part
+            outfile.write(",".join([str(-1), str(realword[rpnum]), str(realblick[rpnum]), str(realngram[rpnum])]) + "," + self.handle_blick_disc(realword[rpnum]) + "\n")
+            outfile2.write(str(-1) + "," + self.handle_blick_disc(realword[rpnum]) + "\n")
+        for iteration in range(iter): #write simulated lexicon
+            lens = []; points = []; used = {}
+            for rnum, r in enumerate(realpoints):
+                poss = tree.query_ball_point(r, minpoint)
+                poss = [i for i in poss if word[i] not in used and get_cv(self.handle_blick_disc(word[i])) == get_cv(self.handle_blick_disc(realword[rnum]))]
+                if len(poss) == 0:
+                    points += [(realword[rnum], blick[rnum], ngram[rnum])]
+                    lens += [0] 
+                    used[realword[rnum]] = 0
+                else:
+                    choice = random.sample(poss, 1)[0]
+                    points += [(word[choice], blick[choice], ngram[choice])]
+                    lens += [len(poss)]
+                    used[word[choice]] = 0
+            for p in points:
+                outfile.write(",".join([str(iteration)] + [str(x) for x in p]) + "," + self.handle_blick_disc(p[0]) + "\n")
+                outfile2.write(str(iteration) + "," + self.handle_blick_disc(p[0]) + "\n")
+        return
+
+    def match_from_biglist(self, fff, cv, iter, match):
+        """Write to lexicons file 2 files: _info.txt with info and simple lex file _lex.txt"""
+        a = [i.strip().split(",") for i in open(fff).readlines()]
+        word, blick, ngram, realword, realblick, realngram = [], [], [], [], [], []
+        a = a[1:]
+        random.shuffle(a)
+        word_spot = 0
+        if self.disc == 1: word_spot = -1
+        for row in a[1:]:
+            if row[3] != "Real":
+                word += [row[word_spot]]; blick += [float(row[1])]; ngram += [float(row[2])]
+            else: 
+                realword += [row[word_spot]]; realblick += [float(row[1])]; realngram += [float(row[2])]
+        if match == "ngram":
+            p = zip(ngram); realpoints = zip(realngram); minpoint = .03
+        elif match == "blick":
+            p = zip(blick); realpoints = zip(realblick); minpoint = .03
+        else: 
+            p = zip(blick, ngram); realpoints = zip(realblick, realngram); minpoint = .3
+        tree = kd(p)
+        if cv == 0: minpoint = minpoint*.75
+        print self.fn
+        outfile = open("Lexicons/" + self.fn.split("/")[-1][:-4] + "_info.txt", "w")
+        outfile2 = open("Lexicons/" + self.fn.split("/")[-1][:-4] + "_lex.txt", "w")
+        self.match_loop(outfile, outfile2, realpoints, realword, realblick, realngram, fff, cv, iter, minpoint, blick, ngram, word, tree)
+        outfile.close()
+        outfile2.close()
+        return
 
 
 """ --------------generate------------"""
@@ -306,7 +423,7 @@ def generate_correct_number(n, corpus, homo, x):
 
 def write_lex_file(corpus, cv, iter, model, n, homo):
     corpus = [i.strip() for i in open(args.corpus, "r").readlines()]
-    outfile  = open("Lexicons/lex_" + args.corpus.split("/")[-1][:-4] + "_cv" +  str(args.cv) + "_iter" + str(args.iter) + "_m" + args.model + ".txt", "w")
+    o = "Lexicons/lex_" + args.corpus.split("/")[-1][:-4] + "_cv" +  str(args.cv) + "_iter" + str(args.iter) + "_m" + args.model + ".txt"
     print model, len(corpus)
     if model == "nphone":#TO COMPLETE once other models will been defined
         lm = NgramModel(n, corpus, 1, homo)
@@ -322,7 +439,10 @@ def write_lex_file(corpus, cv, iter, model, n, homo):
             line.rstrip('\n')
             A, B = line.split("\t")
             lm.add_prod(A, B)
-	    	
+    elif model.startswith("bigmatch"):
+        lm = BigMatch(n, [re.sub("-", "", i) for i in corpus], homo, model.split("_")[-1], o)
+        return o[:-4] + "_lex.txt"  ###bigmatch produces its own lex file, does not need the below
+    outfile  = open(o, "w")
     for r in corpus:
         outfile.write("-1," + re.sub("-","",r) + "\n")
     print "lexicon: ", lm.pword_avg(corpus) # /!\ need an entropy function in the class model of the lm
@@ -332,7 +452,7 @@ def write_lex_file(corpus, cv, iter, model, n, homo):
             outfile.write(str(i) + "," +  re.sub("-","",w[1]) + "\n")
         print "generated lexicon: ", str(i), lm.pword_avg(gen_lex)# /!\ need an entropy function in the class model of the lm
     outfile.close()
-    return
+    return o
 
 
 
@@ -385,7 +505,11 @@ parser.add_argument('--train', metavar='--t', type=float, nargs='?',
 args = parser.parse_args()
 
 if args.fnc == "generate":
-    write_lex_file(args.corpus, args.cv, args.iter, args.model, args.n, args.homo)
+   lexfile = write_lex_file(args.corpus, args.cv, args.iter, args.model, args.n, args.homo)
+   write_all(lexfile, 4, 8)
 else: #evaluate /!\ works only with ngrams as now
-    evaluate_model(args.corpus, args.iter, args.model, args.n, args.homo, args.train)
+   evaluate_model(args.corpus, args.iter, args.model, args.n, args.homo, args.train)
 #python ngram.py --inputsim=permuted_syllssyll__lemma_english_nphone_1_0_4_8.txt --corpus=notcelex
+
+###run R make_hists
+os.system('Rscript make_hists.R')

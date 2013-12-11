@@ -6,6 +6,9 @@ currently implemented:
 ngrams on phones (default) 
 ngrams on syllables: --model nsyll
 pcfg --model pcfg
+bigmatch --model bigmatch_both
+--model bigmatch_ngram
+--model bigmatch_
 
 -calc_stats.py
 input lex file in format and output lexical stats in rfiles
@@ -24,3 +27,9 @@ Notes:
 - the ngram syllable class is redundant with the simple ngram class, just made it as it is now to not mess up with the rest but could be merged
 - the smoothing function in nltk is buggy or just did not get why the number of bins should be precised if it is precisely for unseen data... (only useful for the evaluation function)
 - there are several inelegant stuff I did, feel free to modify whatever you want, I am not particularly attached to anything!!
+
+-make_hists.R
+-takes all files in rfiles (either indwords_ or global_) and makes histograms
+-right now just for neighbors but easily modifiable for all
+-ind_words contains length separated versions
+

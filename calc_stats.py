@@ -1,5 +1,5 @@
 from nltk import *
-import random, sys, re
+import random, sys, re, os
 import nltk
 import argparse
 import itertools
@@ -72,13 +72,13 @@ def write_all(inputsim, minlength, maxlength):
     return
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--inputsim', metavar='--inputsim', type=str, nargs='?', help='use this if you want to input a file that contains simulated lexicons instead of ngrams. the file should be a csv in format simnum,word', default="none")
-parser.add_argument('--minlength', metavar='--minl', type=int, nargs='?',
-                    help='minimum length of word allowed from celex', default=4)
-parser.add_argument('--maxlength', metavar='--maxl', type=int, nargs='?',
-                    help='maximum length of word allowed from celex', default=8)
+# parser = argparse.ArgumentParser()
+# parser.add_argument('--inputsim', metavar='--inputsim', type=str, nargs='?', help='use this if you want to input a file that contains simulated lexicons instead of ngrams. the file should be a csv in format simnum,word', default="none")
+# parser.add_argument('--minlength', metavar='--minl', type=int, nargs='?',
+#                     help='minimum length of word allowed from celex', default=4)
+# parser.add_argument('--maxlength', metavar='--maxl', type=int, nargs='?',
+#                     help='maximum length of word allowed from celex', default=8)
 
-args = parser.parse_args()
+# args = parser.parse_args()
 
-write_all(args.inputsim, 4, 8)
+# write_all(args.inputsim, 4, 8)
