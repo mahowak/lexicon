@@ -1,7 +1,15 @@
 library(ggplot2)
 library(plyr)
 
-setwd('~/Dropbox/lexicon/')
+
+FOLDERID <- "~/Desktop/"
+FOLDERKM <- "~/Dropbox/"
+
+
+if (file.exists(FOLDERID)) {FOLDER <- FOLDERID} else {FOLDER<-FOLDERKM}
+
+setwd(paste(FOLDER, "lexicon/", sep=""))
+
 dat.files <- list.files('rfiles', full.names=TRUE) # read file names with full paths
 lengths = c(4,5,6,7,8)
 

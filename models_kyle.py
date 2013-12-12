@@ -65,7 +65,7 @@ class NgramModel():
         self.cfd = ConditionalFreqDist()
         self.update_cfd(self.n, self.corpus)
         self.cpd_unsmooth = ConditionalProbDist(self.cfd, nltk.MLEProbDist)
-#        self.cpd_smooth = ConditionalProbDist(self.cfd, nltk.LaplaceProbDist, len(self.cfd))#issue with SimpleGoodTuringProbDist but also with other smoothing functions, does not work as is for n = 1
+#        self.cpd_smooth = ConditionalProbDist(self.cfd, nltk.LaplaceProbDist, 42)#issue with SimpleGoodTuringProbDist but also with other smoothing functions, does not work as is for n = 1
 
 
     def update_cfd(self, n, corpus):
@@ -122,7 +122,7 @@ class NsyllModel():
         self.cfd = ConditionalFreqDist()
         self.update_cfd_syll(self.n, self.corpus)
         self.cpd_unsmooth = ConditionalProbDist(self.cfd, nltk.MLEProbDist)
-#        self.cpd_smooth = ConditionalProbDist(self.cfd, nltk.LaplaceProbDist, len(self.cfd))#issue with SimpleGoodTuringProbDist but also with other smoothing functions, does not work as is for n = 1
+#        self.cpd_smooth = ConditionalProbDist(self.cfd, nltk.LaplaceProbDist, 3312)#issue with SimpleGoodTuringProbDist but also with other smoothing functions, does not work as is for n = 1
 
 
     def update_cfd_syll(self, n, corpus):
@@ -466,7 +466,12 @@ def evaluate_model(corpus, iter, model, n, homo, train_frac):#TO DO: create a fi
         test_corpus = random.sample(corpus, int((1-train_frac)*len(corpus)))
         if model == "nphone":#TO COMPLETE once other models will been defined
             lm = NgramModel(n, train_corpus, 1, homo)
-	    print iter, str(model) + " evaluation based on " + str(train_frac) + " of corpus:", lm.entropy_avg(test_corpus), lm.perplexity(test_corpus)
+            lm_all = NgramModel(n, corpus, 1, homo)
+        elif model == "nsyll":
+            lm = NsyllModel(n, train_corpus, 1, homo)
+            lm_all = NsyllModel(n, corpus, 1, homo)
+        print i, str(model) + " evaluation based on " + str(train_frac) + " of corpus:", lm.pword_avg(test_corpus), "| on 100% of corpus:", lm_all.pword_avg(test_corpus)
+
 
 
 """ --------------main------------"""
@@ -507,7 +512,7 @@ args = parser.parse_args()
 if args.fnc == "generate":
    lexfile = write_lex_file(args.corpus, args.cv, args.iter, args.model, args.n, args.homo)
    write_all(lexfile, 4, 8)
-else: #evaluate /!\ works only with ngrams as now
+else: #evaluate /!\ works only with ngrams and nsyll as now
    evaluate_model(args.corpus, args.iter, args.model, args.n, args.homo, args.train)
 #python ngram.py --inputsim=permuted_syllssyll__lemma_english_nphone_1_0_4_8.txt --corpus=notcelex
 
