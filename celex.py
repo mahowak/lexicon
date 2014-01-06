@@ -9,8 +9,8 @@ import pickle
 t = time.time()
 import random, sys, re
 
-user_celex_path = "/Users/km/Documents/celex2/"
-
+#user_celex_path = "/Users/km/Documents/celex2/"
+user_celex_path = "/Users/isa/Desktop/PhD/3. Projets/10. Etude du Lexique/celex_raw/" 
 
 """produces file with header: "lexicon,homophones,mps,neighbors,avg_lev,num_words\n"
 
@@ -89,7 +89,7 @@ def celex_pron_loc(language, lemma):
 
 def extract_celex_info(line, language="english", lemma="lemma", model="ortho"):
     """ Return celex word (ortho or phonemic) and its freq from celex line. """
-    if line[1].isalpha() and line[1].islower() and "-" not in line[1] and "." not in line[1] and "'" not in line[1] and " " not in line[1]:
+    if line[1].isalpha() and line[1].islower() and "-" not in line[1] and "." not in line[1] and "'" not in line[1] and " " not in line[1]:#we dont take proper names but careful this will not work well for German
         return line[celex_pron_loc(language, lemma)], line[2] #pron, frequency
     return
 
@@ -102,34 +102,44 @@ def build_celex_corpus(path, language, lemma, model, mono):
     return [i for i in corpus if i != None]
 
 
-def build_real_lex(path, lemma, language, model, mono, homo, minlength, maxlength, celex_list):
+def build_real_lex(path, lemma, language, mono, homo, minlength, maxlength, freq, celex_list):
     celex_path = get_celex_path(path, lemma, language)
     print celex_path
     corpus = build_celex_corpus(celex_path, language, lemma, model, mono)
-    corpus = [c for c in corpus if c[1] > 0]
-    corpus = [clean_word(c[0]) for c in corpus] #reduce celex to just pronunciation
-    corpus =  [celex_diphthong_sub(c) for c in corpus if "c" not in c and "q" not in c and "0" not in c and "~" not in c]
-    corpus = [i for i in corpus if (len(re.sub("-", "", i)) >= minlength and len(re.sub("-", "", i)) <= maxlength)]
-    if homo == 0: corpus = list(set(corpus))
+    corpus = [c for c in corpus if float(c[1]) > 0]
+    corpus = [(clean_word(c[0]), c[1]) for c in corpus] #reduce celex to just pronunciation
+    corpus =  [(celex_diphthong_sub(c[0]), c[1]) for c in corpus if "c" not in c[0] and "q" not in c[0] and "0" not in c[0] and "~" not in c[0]]
+    corpus = [c for c in corpus if (len(re.sub("-", "", c[0])) >= minlength and len(re.sub("-", "", c[0])) <= maxlength)]
+    dict_corpus = nltk.defaultdict(int)
+    for c in corpus:
+        if not c[0] in dict_corpus:
+            dict_corpus[c[0]] = c[1]
+        else:
+            dict_corpus[c[0]] = dict_corpus[c[0]] + c[1]
+    if homo == 0: corpus = [(x, y) for x, y in dict_corpus.iteritems()]
     print ">>>TOTAL NB OF WORDS", len(corpus)    
     f = open("celexes/" + "_".join([str(i) for i in celex_list]) + ".txt", "w")
-    for line in corpus: f.write(line + "\n")
+    if freq == 0:
+        corpus = [c[0] for c in corpus]
+        for line in corpus: f.write(line + "\n")
+    else:
+        f.write('\n'.join('%s\t%s' % c for c in corpus))
     f.close()
     return corpus
 
 
 #build_real_lex(user_celex_path, "lemma", "english", "nphone", 0, 1, 3, 9
 parser = argparse.ArgumentParser()
-parser.add_argument('--n', metavar='--n', type=int, nargs='?',
-                    help='n for ngram', default=3)
-parser.add_argument('--homo', metavar='h', type=int, nargs='?',
-                    help='0 to exclude homophones being generated, 1 for homophones allowed', default=0)
+#parser.add_argument('--n', metavar='--n', type=int, nargs='?',
+#                    help='n for ngram', default=3)
+#parser.add_argument('--homo', metavar='h', type=int, nargs='?',
+#                    help='0 to exclude homophones being generated, 1 for homophones allowed', default=0)
 parser.add_argument('--lemma', metavar='--lem', type=str, nargs='?',
                     help='lemma or wordform in celex', default="lemma")
 parser.add_argument('--language', metavar='--lang', type=str, nargs='?',
                     help='', default="english")
-parser.add_argument('--model', metavar='--m', type=str, nargs='?',
-                    help='should be nphone for ngram model', default="nphone")
+#parser.add_argument('--model', metavar='--m', type=str, nargs='?',
+#                    help='should be nphone for ngram model', default="nphone")
 parser.add_argument('--mono', metavar='--mono', type=int, nargs='?',
                     help='1 for mono only, 0 ow', default=1)
 parser.add_argument('--homocel', metavar='--homocel', type=int, nargs='?',
@@ -138,9 +148,11 @@ parser.add_argument('--minlength', metavar='--minl', type=int, nargs='?',
                     help='minimum length of word allowed from celex', default=4)
 parser.add_argument('--maxlength', metavar='--maxl', type=int, nargs='?',
                     help='maximum length of word allowed from celex', default=8)
-parser.add_argument('--iter', metavar='--i', type=int, nargs='?',
-                    help='number of lexicons to generate', default=2)
-parser.add_argument('--corpus', metavar='--c', type=str, nargs='?', help='put corpus file (list of words, one on each lien) to override celex', default='celex')
+#parser.add_argument('--iter', metavar='--i', type=int, nargs='?',
+#                   help='number of lexicons to generate', default=2)
+parser.add_argument('--freq', metavar='--f', type=int, nargs='?',
+                     help='add frequency to the output', default=0)
+#parser.add_argument('--corpus', metavar='--c', type=str, nargs='?', help='put corpus file (list of words, one on each lien) to override celex', default='celex')
 parser.add_argument('--syll', metavar='--syll', type=int, nargs='?', help='include syll in celex', default=0)
 parser.add_argument('--inputsim', metavar='--inputsim', type=str, nargs='?', help='use this if you want to input a file that contains simulated lexicons instead of ngrams. the file should be a csv in format simnum,word', default="none")
 parser.add_argument('--cv', metavar='--cv', type=int, nargs='?', help='put 1 here to match for CV pattern', default=0)
@@ -148,10 +160,11 @@ parser.add_argument('--cv', metavar='--cv', type=int, nargs='?', help='put 1 her
 
 args = parser.parse_args()
 
-celex_list = [args.lemma, args.language, args.model, args.mono, args.homocel, args.minlength, args.maxlength]
+celex_list = [args.lemma, args.language, args.mono, args.homocel, args.minlength, args.maxlength]
 
 if args.syll == 1: celex_list = ['syll_'] + celex_list
+if args.freq == 1: celex_list = ['freq_'] + celex_list
 
-if args.corpus == 'celex': 
-    a = build_real_lex(user_celex_path, args.lemma, args.language, args.model, args.mono, args.homocel, args.minlength, args.maxlength, celex_list)
-    argslist = "_".join([str(j) for j in celex_list] + [str(args.n), str(args.homo), str(args.iter), str(args.cv)])
+#if args.corpus == 'celex': 
+a = build_real_lex(user_celex_path, args.lemma, args.language, args.mono, args.homocel, args.minlength, args.maxlength, args.freq, celex_list)
+argslist = "_".join([str(j) for j in celex_list] + [str(args.homocel), str(args.cv)])
