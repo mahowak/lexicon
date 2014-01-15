@@ -75,6 +75,11 @@ def get_celex_monos(path, language):
     a = read_in_celex_lines(user_celex_path + language + "/{lang}ml/{lang}ml.cd".format(lang=language[0]))
     return [i[0] for i in a if i[3] == "M"]
 
+def get_celex_freq(path, language):
+    """ Return tuples of celex ids and freq per million word. """
+    a = read_in_celex_lines(user_celex_path + language + "/{lang}fl/{lang}fl.cd".format(lang=language[0]))
+    return dict((i[0], i[6]) for i in a)
+
 def get_celex_path(path, lemma, language):
     """ Return celex path, given root, lemma, language. """
     return path + language + "/{lang}p{lem}/{lang}p{lem}.cd".format(lang=language[0], lem=lemma[0])
@@ -87,10 +92,10 @@ def celex_pron_loc(language, lemma):
     if lemma == "wordform": pron += 1
     return pron
 
-def extract_celex_info(line, language="english", lemma="lemma", model="ortho"):
+def extract_celex_info(line, freqs, language="english", lemma="lemma", model="ortho"):
     """ Return celex word (ortho or phonemic) and its freq from celex line. """
     if line[1].isalpha() and line[1].islower() and "-" not in line[1] and "." not in line[1] and "'" not in line[1] and " " not in line[1]:#we dont take proper names but careful this will not work well for German
-        return line[celex_pron_loc(language, lemma)], line[2] #pron, frequency
+        return line[celex_pron_loc(language, lemma)], float(freqs[line[0]]) #pron, frequency
     return
 
 
@@ -98,7 +103,8 @@ def build_celex_corpus(path, language, lemma, model, mono):
     """ Return corpus from celex, given path and parameters. """
     lines = read_in_celex_lines(path); corpus = []; monos = []
     if mono == 1: monos = get_celex_monos(path, language)
-    corpus = [extract_celex_info(line, language, lemma, model) for line in lines if (mono == 0 or line[0] in monos)]
+    freqs = get_celex_freq(path, language)
+    corpus = [extract_celex_info(line, freqs, language, lemma, model) for line in lines if (mono == 0 or line[0] in monos)]
     return [i for i in corpus if i != None]
 
 
@@ -113,9 +119,9 @@ def build_real_lex(path, lemma, language, mono, homo, minlength, maxlength, freq
     dict_corpus = nltk.defaultdict(int)
     for c in corpus:
         if not c[0] in dict_corpus:
-            dict_corpus[c[0]] = c[1]
+            dict_corpus[c[0]] = float(c[1])
         else:
-            dict_corpus[c[0]] = dict_corpus[c[0]] + c[1]
+            dict_corpus[c[0]] += float(c[1])
     if homo == 0: corpus = [(x, y) for x, y in dict_corpus.iteritems()]
     print ">>>TOTAL NB OF WORDS", len(corpus)    
     f = open("celexes/" + "_".join([str(i) for i in celex_list]) + ".txt", "w")

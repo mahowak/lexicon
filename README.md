@@ -1,3 +1,32 @@
+**As of 15/01/14
+As the main file (models_kyle.py) was getting messy, I took the initiative to split the file in several subfiles:
+main.py (it's in the name)
+A super class: lm.py (with methods create_model, generate, evaluate)
+inheriting from the subclasses:
+-> nphone.py
+-> nsyll.py
+-> bigmatch.py
+-> pcfg.py
+Option to chose the model should be specified in the command line:
+(default nphone --n 3)
+--model bigmatch_ngram
+--model bigmatch_blick
+--model bigmatch_both
+--model pcfg
+--model nsyll (only for n = 1 or n = 2)
+
+Methods for evaluation are in evaluation.py (as now the cross entropy function is NOT returning cross-entropy but average logprob as I was checking for consistency with previous results -- I was used to the logprob)
+Methods for generation are in generation.py
+
+Now we can evaluate from nphone and nsyll by specifying:
+--fnc evaluate
+it smoothes the conditional probabilities with Katz's smoothing from katz.py and gt.py
+As now the implementation is ugly and need to be updated, it was just to test that all is working fine.
+
+
+
+
+**OLD
 -model.py main file for adding and implementing different models has two functions: 1. generating rand lexicon according to a given model (default mode) 2. evaluating the given model on a corpus (splitted between train and test set) currently implemented: ngrams on phones (default) ngrams on syllables: --model nsyll pcfg --model pcfg ngrams using pool of pre-generated word --model npool (match each real word with a non word of same ngram proba +/- eps)
 --model bigmatch_ngram
 --model bigmatch_blick
