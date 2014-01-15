@@ -15,7 +15,7 @@ Option to chose the model should be specified in the command line:
 --model pcfg
 --model nsyll (only for n = 1 or n = 2)
 
-Methods for evaluation are in evaluation.py (as now the cross entropy function is NOT returning cross-entropy but average logprob as I was checking for consistency with previous results -- I was used to the logprob)
+Methods for evaluation are in evaluation.py (as now the cross entropy function is NOT returning cross-entropy but average logprob as I was checking for consistency with previous results -- I was used to the logprob -- so do not mind the crazy perplexity score)
 Methods for generation are in generation.py
 
 Now we can evaluate from nphone and nsyll by specifying:

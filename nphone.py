@@ -95,7 +95,6 @@ class NgramModel(LM):
                 except ValueError:
                     return 0.0
                 fifo.append(ch)
-                fifo.pop()
         return p
                                                             
                                                          
