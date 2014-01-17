@@ -1,4 +1,5 @@
 from lm import *
+from katz import *
 from nltk import *
 from math import log
 import nltk
@@ -64,11 +65,13 @@ class NsyllModel(LM):
         """ get the log probability of generating a given word under the language model """
         LM.evaluate(self, word)
         p=0
+        gram=0
         if self.smoothing:
-            grams=nltk.ngrams(["<S>"]*(self.n-1) + [i for i in wordi.split("-")] + ["<E>"], self.n)
+            grams=nltk.ngrams(["<S>"]*(self.n-1) + [i for i in word.split("-")] + ["<E>"], self.n)
             probs,unseen_prob = self.cpd
             cf =  generate_cf(ConditionalFreqDist(), grams)
             for prefix,suffix in cf.iteritems():
+                gram +=1
                 if prefix not in probs:
                     p += log(unseen_prob)
                 else:
@@ -88,6 +91,6 @@ class NsyllModel(LM):
                 except ValueError:
                     return 0.0
                 fifo.append(syll)
-        return p 
+        return gram, p 
                                                             
                

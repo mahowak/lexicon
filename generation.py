@@ -55,12 +55,12 @@ def write_lex_file(o, corpus, cv, iter, lm, homo):
     outfile  = open(o, "w")
     for c in corpus:
         outfile.write("-1," + re.sub("-","",c) + "\n")
-    print "lexicon: ", cross_entropy(lm, corpus, lm.n), perplexity(cross_entropy(lm, corpus, lm.n))
+    print "lexicon: ", cross_entropy(lm, corpus), perplexity(cross_entropy(lm, corpus))
     for i in range(iter):
         gen_lex= generate_correct_number(corpus, homo, lm)
         for w in gen_lex:
             outfile.write(str(i) + "," +  re.sub("-","",w) + "\n")
-        print "generated lexicon: ", str(i), cross_entropy(lm, gen_lex, lm.n)
+        print "generated lexicon: ", str(i), cross_entropy(lm, gen_lex)
     outfile.close()
     return o
 

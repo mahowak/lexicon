@@ -122,7 +122,7 @@ class PCFG(LM):
       
     
     def evaluate(self, word):
-        return  float(self.parse(word))
+        return len(re.sub("-","",word)), float(self.parse(word))
         #if self.ngram != None:
         #    while self.ngram.evaluate(word)==0:
         #        word, p = self.generate_one(symbol='Word')

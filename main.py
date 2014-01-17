@@ -8,13 +8,9 @@ import time, datetime
 import pickle
 t = time.time()
 import random, sys, re
-from math import log, sqrt, exp 
 import collections
-#from gt import *
 from calc_stats import *
-#from blick import BlickLoader
 import copy
-#from sets import Set
 from lm import *
 from nphone import NgramModel
 from nsyll import NsyllModel
@@ -23,9 +19,7 @@ from bigmatch import BigMatch
 #from kn import *
 from evaluation import *
 from generation import *
-#from good_turing import *
 
-#b = BlickLoader()
 
 
 
@@ -38,6 +32,12 @@ try:
     os.mkdir('matchedLexica')
 except OSError:
     pass
+
+try:
+    os.mkdir('Graph')
+except OSError:
+    pass
+
 
 
 
@@ -76,6 +76,8 @@ parser.add_argument('--train', metavar='--t', type=float, nargs='?',
                       help='fraction of corpus use for training', default=0.75)
 parser.add_argument('--freq', metavar='--freq', type=int, nargs='?',
                        help='use frequency based lm', default=0)
+parser.add_argument('--graph', metavar='--g', type=int, nargs='?',
+                        help='output graph', default=0)
 
 args = parser.parse_args()
 corpus = [i.strip() for i in open(args.corpus, "r").readlines()]
@@ -84,9 +86,17 @@ print args.model, len(corpus), "sample", corpus[0]
 if args.model == "nphone":
     lm = NgramModel(args.n, corpus)
 elif args.model == "nsyll":
-    lm = NsyllModel(args.n, corpus)
+    if args.corpus.startswith("celexes/syll"):
+        lm = NsyllModel(args.n, corpus)
+    else:
+        print "Use syll__ file for this model"
+        sys.exit()
 elif args.model == "pcfg":
-    lm = PCFG(args.grammar, NgramModel(args.n, corpus))
+    if args.corpus.startswith("celexes/syll"):
+        lm = PCFG(args.grammar, NgramModel(args.n, corpus))
+    else:
+        print "Use syll__ file for this model"
+        sys.exit()
 elif args.model.startswith("bigmatch"):
     lm = BigMatch(args.n, corpus, args.corpus[:-4] + "_tomatch.txt")
 
@@ -99,15 +109,22 @@ if args.fnc == "generate":
     else:
         lm.match_from_biglist(args.cv, args.iter, args.model.split("_")[-1])
         lexfile = o[:-4] + "_lex.txt"
-    write_all(lexfile, 4, 8)
+    write_all(lexfile, 4, 8, args.graph)
     os.system('Rscript make_hists.R')
 else: #evaluate /!\ works only with ngrams as now
-    train = random.sample(corpus, int(args.train*len(corpus)))
-    test = random.sample(corpus, int((1-args.train)*len(corpus)))
-    lm= NgramModel(args.n, train)
-    lm.create_model(train, "katz")
-    print "Katz Smoothing -----", cross_entropy(lm, test, lm.n), perplexity(cross_entropy(lm, test, lm.n))
-    
+    for i in range(args.iter):
+        train = random.sample(corpus, int(args.train*len(corpus)))
+        test = random.sample(corpus, int((1-args.train)*len(corpus))) 
+        if args.model == "nphone":
+            lm= NgramModel(args.n, train)
+        elif args.model == "nsyll":
+            lm = NsyllModel(args.n, train)
+        else:
+            print "not yet implemented"
+            sys.exit()
+        lm.create_model(train, "katz")
+        print i,"Katz Smoothing -----", cross_entropy(lm, test), perplexity(cross_entropy(lm, test))
+         
     #evaluate_model(args.corpus, args.iter, args.model, args.n, args.homo, args.train, args.freq)
 #python ngram.py --inputsim=permuted_syllssyll__lemma_english_nphone_1_0_4_8.txt --corpus=notcelex
 

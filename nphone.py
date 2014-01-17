@@ -71,11 +71,13 @@ class NgramModel(LM):
         """ get the log probability of generating a given word under the language model """
         LM.evaluate(self, word)
         p=0
+        gram=0
         if self.smoothing:
             grams=nltk.ngrams(["<S>"]*(self.n-1) + [i for i in word] + ["<E>"], self.n)
             probs,unseen_prob = self.cpd
             cf =  generate_cf(ConditionalFreqDist(), grams)
             for prefix,suffix in cf.iteritems():
+                gram +=1
                 if prefix not in probs:
                     p += log(unseen_prob)
                 else:
@@ -88,13 +90,13 @@ class NgramModel(LM):
         else:
             word = [i for i in word] + ["<E>"]
             fifo = ["<S>"]*(self.n -1)
-            for i, ch in enumerate(word):
+            for gram, ch in enumerate(word):
                 context = "".join(fifo[(len(fifo) - (self.n - 1)):len(fifo)])
                 try:
                     p += log(self.cpd[context].prob(ch))#smooth or unsmooth TODO: make it as a param (evaluate vs. generate) 
                 except ValueError:
                     return 0.0
                 fifo.append(ch)
-        return p
+        return gram,p
                                                             
                                                          

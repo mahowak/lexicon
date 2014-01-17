@@ -9,7 +9,9 @@ import time, datetime
 import pickle
 t = time.time()
 import random, sys, re
-
+from networkx import *
+import networkx as nx
+import matplotlib.pyplot as plt
 
 """Take in simulated lexicons file with -1 for real lexicon and 0-N for simulated lexicon
 and output lexical stats"""
@@ -19,7 +21,7 @@ except OSError:
     pass
 
 
-def write_lex_stats(b, num, f, f2):
+def write_lex_stats(b, num, f, f2, graph= False):
     """Use Levenshtein package to calcualte lev and count up mps, neighbors, etc"""
     total = 0.
     mps = 0
@@ -30,13 +32,20 @@ def write_lex_stats(b, num, f, f2):
     mdict = nltk.defaultdict(int)
     hdict = nltk.defaultdict(int)
     uniq = nltk.defaultdict(int)
+    g = nx.Graph()
+    g.l = {}
 #   dict_b = dict((t[0], float(t[1])) for t in b)
     for item in itertools.combinations(b, 2):
         lev = Levenshtein.distance(item[0], item[1])
+        g.add_node(item[0])
+        g.add_node(item[1])
+        g.l[item[0]] = len(item[0])
+        g.l[item[1]] = len(item[1])
         if lev == 0: 
             homophones += 1
             hdict[item[0]] += 1
         elif lev == 1:
+            g.add_edge(item[0], item[1])
             neighbors += 1
             ndict[item[0]] += 1#*log(dict_b[item[1]])
             ndict[item[1]] += 1#*log(dict_b[item[0]])
@@ -48,14 +57,22 @@ def write_lex_stats(b, num, f, f2):
         uniq[item[0]] = 1
         total += 1
         lev_total += lev
-    print neighbors
+    print "neighbors", neighbors
+    print "average clustering", average_clustering(g)
+    if graph == True:
+        plt.figure(figsize=(50,50))
+        pos=nx.spring_layout(g)
+#    node_color=[float(g.degree(w)) for w in g]
+        nx.draw_networkx(g,pos, with_labels = False,  node_size = 40, edge_color = '0.8', node_color='k')
+#        nx.draw_networkx_nodes(g,pos, node_size=40)
+        plt.savefig('graph/' + str(num))
     f.write(",".join([str(x) for x in [num, len(hdict), len(b) - (len(uniq) - len(hdict)) - 1 , mps, neighbors, lev_total/total, len(b), sum(mdict.values())/len(b), sum(ndict.values())/len(b)]]) + "\n")
     for item in tuple(x[0] for x in b):
         f2.write(",".join([str(num), str(item), str(hdict[item]), str(mdict[item]/(hdict[item] + 1.)), str(ndict[item]/(hdict[item] + 1.)), str(len(item)) ]) + "\n")
     return
 
 
-def write_all(inputsim, minlength, maxlength):
+def write_all(inputsim, minlength, maxlength, graph):
     ###global file
     ftowrite = inputsim.split("/")[-1][:-4]
     f = open("rfiles/" + "global_" + ftowrite + ".txt", "w")
@@ -72,7 +89,7 @@ def write_all(inputsim, minlength, maxlength):
     write_lex_stats(inputlist[-1], "real", f, f2)
     for i in range(0, max(inputlist.keys()) + 1):
         print "writing simulated lexicon stats: ", str(i)
-        write_lex_stats(inputlist[i], i, f, f2)
+        write_lex_stats(inputlist[i], i, f, f2, graph)
     f.close()
     f2.close()
     return
