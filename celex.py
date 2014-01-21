@@ -78,7 +78,11 @@ def get_celex_monos(path, language):
 def get_celex_freq(path, language):
     """ Return tuples of celex ids and freq per million word. """
     a = read_in_celex_lines(user_celex_path + language + "/{lang}fl/{lang}fl.cd".format(lang=language[0]))
-    return dict((i[0], i[6]) for i in a)
+    if language == "english":
+        return dict((i[0], i[6]) for i in a)
+    else:
+        return dict((i[0], i[4]) for i in a)
+
 
 def get_celex_path(path, lemma, language):
     """ Return celex path, given root, lemma, language. """

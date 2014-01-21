@@ -66,8 +66,8 @@ def write_lex_stats(b, num, f, f2, graph= False):
         nx.draw_networkx(g,pos, with_labels = False,  node_size = 40, edge_color = '0.8', node_color='k')
 #        nx.draw_networkx_nodes(g,pos, node_size=40)
         plt.savefig('graph/' + str(num))
-    f.write(",".join([str(x) for x in [num, len(hdict), len(b) - (len(uniq) - len(hdict)) - 1 , mps, neighbors, lev_total/total, len(b), sum(mdict.values())/len(b), sum(ndict.values())/len(b)]]) + "\n")
-    for item in tuple(x[0] for x in b):
+    f.write(",".join([str(x) for x in [num, len(hdict), len(b) - (len(uniq) - len(hdict)) - 1 , mps, neighbors, lev_total/total, len(b)]]) + "\n")
+    for item in b:
         f2.write(",".join([str(num), str(item), str(hdict[item]), str(mdict[item]/(hdict[item] + 1.)), str(ndict[item]/(hdict[item] + 1.)), str(len(item)) ]) + "\n")
     return
 
@@ -76,7 +76,7 @@ def write_all(inputsim, minlength, maxlength, graph):
     ###global file
     ftowrite = inputsim.split("/")[-1][:-4]
     f = open("rfiles/" + "global_" + ftowrite + ".txt", "w")
-    f.write("lexicon,homophones,mps,neighbors,avg_lev,num_words\n")
+    f.write("lexicon,homophones_type, homophones_token ,mps,neighbors,avg_lev,num_words\n")
     ###word-level stats
     f2 = open("rfiles/" + "indwords_" + ftowrite + ".txt", "w")
     f2.write("lexicon,word,homophones,mps,neighbors,length\n")

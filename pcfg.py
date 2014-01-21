@@ -24,7 +24,7 @@ class PCFG(LM):
         self.reject = 0
         LM.__init__(self)
 
-    def create_model(self, corpus): # corpus argument doesnt serve here but to match the LM class
+    def create_model(self, corpus, smoothing = False): # corpus argument doesnt serve here but to match the LM class
         self.ngram.create_model([re.sub("-","",x) for x in corpus])
         g = open(self.grammar_file, 'r')
         self.format_grammar(g)
@@ -114,7 +114,7 @@ class PCFG(LM):
     def filter_word(self):
         word, p = self.generate_one(symbol='Word')
         if self.ngram != None:
-            while self.ngram.evaluate(re.sub("-","",word))==0:
+            while self.ngram.evaluate(re.sub("-","",word))==0 or word[-1] == "-":
                 word, p = self.generate_one(symbol='Word')
                 self.reject +=1
         #self.p_word[word] = p

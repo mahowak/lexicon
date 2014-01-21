@@ -84,7 +84,7 @@ class NsyllModel(LM):
         else:
             word = word.split("-") + ["<E>"]
             fifo = ["<S>"]*(self.n -1)
-            for i, syll in enumerate(word):
+            for gram, syll in enumerate(word):
                 context = "".join(fifo[(len(fifo) - (self.n - 1)):len(fifo)])
                 try:
                     p += log(self.cpd[context].prob(syll))#smooth or unsmooth TODO: make it as a param (evaluate vs. generate) 

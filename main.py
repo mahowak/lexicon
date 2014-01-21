@@ -56,10 +56,10 @@ parser.add_argument('--homo', metavar='h', type=int, nargs='?',
 #                    help='', default="english")
 parser.add_argument('--model', metavar='--m', type=str, nargs='?',
                     help='should be nphone for ngram model', default="nphone")
-#parser.add_argument('--minlength', metavar='--minl', type=int, nargs='?',
-#                   help='minimum length of word allowed from celex', default=4)
-#parser.add_argument('--maxlength', metavar='--maxl', type=int, nargs='?',
-#                    help='maximum length of word allowed from celex', default=8)
+parser.add_argument('--minlength', metavar='--minl', type=int, nargs='?',
+                   help='minimum length of word allowed from celex', default=4)
+parser.add_argument('--maxlength', metavar='--maxl', type=int, nargs='?',
+                    help='maximum length of word allowed from celex', default=8)
 parser.add_argument('--iter', metavar='--i', type=int, nargs='?',
                     help='number of lexicons to generate', default=2)
 parser.add_argument('--corpus', metavar='--c', type=str, nargs='?', 
@@ -109,7 +109,7 @@ if args.fnc == "generate":
     else:
         lm.match_from_biglist(args.cv, args.iter, args.model.split("_")[-1])
         lexfile = o[:-4] + "_lex.txt"
-    write_all(lexfile, 4, 8, args.graph)
+    write_all(lexfile, args.minlength, args.maxlength, args.graph)
     os.system('Rscript make_hists.R')
 else: #evaluate /!\ works only with ngrams as now
     for i in range(args.iter):
@@ -119,6 +119,8 @@ else: #evaluate /!\ works only with ngrams as now
             lm= NgramModel(args.n, train)
         elif args.model == "nsyll":
             lm = NsyllModel(args.n, train)
+        elif args.model == "pcfg":
+            lm = PCFG(args.grammar, NgramModel(args.n, train))
         else:
             print "not yet implemented"
             sys.exit()
