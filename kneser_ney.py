@@ -21,7 +21,7 @@ class KneserNey(dict):
             dict.__init__(self)
         else:
             dict.__init__(self, arg)
-        self.n = self.n1 = self.n2 = self.n3 = self.n4 = 1
+        self.n = self.n1 = self.n2 = self.n3 = self.n4 = 0
         self.N1 = collections.defaultdict(int)
         self.N1plus = collections.defaultdict(int)
         self.N2 = collections.defaultdict(int)
@@ -77,7 +77,7 @@ def perplexity(gram, test,n, V, alpha, alphaN):
             grams =nltk.ngrams(["<S>"]*(n-1) + [i for i in s] + ["<E>"], n)
         for w in grams:
             if n == 1:
-                p = (gram[1][(w,)] + alphaN) / (gram[1].n + V * alphaN)
+                p = (gram[1][w] + alphaN) / (gram[1].n + V * alphaN)
             elif n == 2:
                 if w1 == "":
                     p = (gram[1][(w[-1],)] + alpha[1]) / (gram[1].n + V * alpha[1])
@@ -95,6 +95,41 @@ def perplexity(gram, test,n, V, alpha, alphaN):
             ppl -= math.log(p)
             N += 1
     return math.exp(ppl / N)    
+
+
+
+def kn_perplexity(gram, test, n, V, D1=None, D2=None, D3=None):
+    if D1 == None:
+        D1 = 0#gram[1].n1 / float(gram[1].n1 + 2 * gram[1].n2)
+    if D2 == None:
+        D2 = gram[2].n1 / float(gram[2].n1 + 2 * gram[2].n2)
+    if D3 == None:
+        D3 = gram[3].n1 / float(gram[3].n1 + 2 * gram[3].n2)
+
+    ppl = 0.0
+    N = 0
+    for s in test:
+        w1 = w2 = ''
+        grams =nltk.ngrams(["<S>"]*(n-1) + [i for i in s] + ["<E>"], n)
+        for w in grams:
+            if n==1: c1 = gram[1][w]
+            else: c1 = gram[1][(w[-1],)]
+            p = (max(c1 - D1, 0) + D1 * gram[1].N1plus[()] / V ) / float(gram[1].n)
+            if n > 1 and (w1,) in gram[1]:
+                if n == 2: c2 = gram[2][w]
+                else: c2 = gram[2][w[1:]]
+                p = (max(c2 - D2, 0) + D2 * gram[2].N1plus[(w1,)] * p ) / gram[1][(w1,)]
+                if n > 2 and (w2, w1) in gram[2]:
+                    c3 = gram[3][w]
+                    p = (max(c3 - D3, 0) + D3 * gram[3].N1plus[(w2, w1,)] * p ) / gram[2][(w2, w1)]
+            ppl -= math.log(p)
+            N += 1
+            if n ==2:
+            	w1 = w[-1]
+            elif n == 3: 
+            	w2, w1 = w[-2], w[-1]
+    return math.exp(ppl / N)
+
 
 
 
@@ -123,12 +158,16 @@ V = len(voca)
 alpha = collections.defaultdict(int)
 
 alpha[1], ppl = search(lambda a:perplexity(gram, test, 1, V, alpha, a), 0.0001, 1.0)
-print "UNIGRAM perplexity=%.3f" % ppl
+print "UNIGRAM absolute-discount perplexity=%.3f" % ppl
+print "Kneser-Ney: perplexity=%.3f" % kn_perplexity(gram, test, 1, V)
 
 alpha[2], ppl = search(lambda a:perplexity(gram, test, 2, V, alpha, a), 0.0001, 1.0)
-print "BIGRAM perplexity=%.3f" % ppl
+print "BIGRAM absolute-discount perplexity=%.3f" % ppl
+print "Kneser-Ney: perplexity=%.3f" % kn_perplexity(gram, test, 2, V)
+
 
 alpha[3], ppl = search(lambda a:perplexity(gram, test, 3, V, alpha, a), 0.0001, 1.0)
-print "TRIGRAM perplexity=%.3f" % ppl
+print "TRIGRAM absolute-discount perplexity=%.3f" % ppl
+print "Kneser-Ney: perplexity=%.3f" % kn_perplexity(gram, test, 3, V)
 
 
