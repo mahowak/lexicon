@@ -100,7 +100,7 @@ class PCFG(LM):
             s = symbol.split('+')
         else:
             rand_prod, p = weighted_choice(self.prod[symbol])
-            tot_p += log(p)
+            tot_p += log(p, 10)
             s =  [x for x in self.prod[symbol][rand_prod][0].strip().split(",")]
         for sym in s:
             if sym in self.prod or '+' in sym:# for non-terminals, recurse
@@ -213,7 +213,7 @@ class PCFG(LM):
         """
 
         if i == j:
-            return log(pi[i, j, X])
+            return log(pi[i, j, X], 10)
         else:
             Y, Z, s = bp[i, j, X]
             return self.recover_tree(x, pi, bp, i, s, Y) + self.recover_tree(x, pi, bp, s+1, j, Z)
