@@ -5,7 +5,7 @@ import nltk
 import random, sys, re
 import time, datetime
 from katz import *
-
+import collections
 
 """ --------------ngram model------------"""
 
@@ -28,24 +28,35 @@ class NgramModel(LM):
         self.n = n
         self.__dict__.update(locals())
         self.cfd = ConditionalFreqDist()
-        self.cpd  = {}
+        self.cpd  = collections.defaultdict(lambda: collections.defaultdict(int))
         self.smoothing = 0
+        self.U = 0
+        self.units =[]
         LM.__init__(self)
 
        # self.cpd_smooth = ConditionalProbDist()#self.cfd, nltk.LaplaceProbDist, 35)#issue with SimpleGoodTuringProbDist but also with other smoothing functions, does not work as is for n = 1
 
-    def create_model(self, corpus, smoothing = None):
+    def create_model(self, corpus, smoothing = 0):
         """Update cfd using ngrams"""
+        unigrams = []
         for item in corpus:
             item_ngrams = nltk.ngrams(["<S>"]*(self.n-1) + [i for i in item] + ["<E>"], self.n)
             for ng in item_ngrams:
-                self.cfd["".join(ng[:-1])].inc(ng[-1])
-        if smoothing == None:
-            self.cpd  = ConditionalProbDist(self.cfd, nltk.MLEProbDist)
-        elif smoothing == "katz":
-            self.smoothing = 1
-            m  = KatzSmoothing(self.n)
-            self.cpd = m.smooth_cpd(self.cfd)
+            	self.cfd["".join(ng[:-1])].inc(ng[-1])
+                unigrams += [ng[-1]]
+        #for i in self.cfd.keys():
+         #   val = self.cfd[i].values()
+          #  keys = self.cfd[i].keys()
+           # random.shuffle(val)
+          #  temp = dict(zip(keys, val))
+          #  for k, v in temp.iteritems():
+           #     self.cfd[i][k] = v
+        self.U = len(set(unigrams))
+        self.units = set(unigrams)
+        self.smoothing = smoothing
+        for i in self.cfd.keys():
+            for j in self.cfd[i].keys():
+            	self.cpd[i][j] = (self.cfd[i][j] + smoothing) / float(sum(self.cfd[i].values()) + smoothing*self.U)
         LM.create_model(self, corpus, smoothing)
 
     def generate(self, ngen = 1):
@@ -72,31 +83,23 @@ class NgramModel(LM):
         LM.evaluate(self, word)
         p=0
         gram=0
-        if self.smoothing:
-            grams=nltk.ngrams(["<S>"]*(self.n-1) + [i for i in word] + ["<E>"], self.n)
-            probs,unseen_prob = self.cpd
-            cf =  generate_cf(ConditionalFreqDist(), grams)
-            for prefix,suffix in cf.iteritems():
-                gram +=1
-                if prefix not in probs:
-                    p += log(unseen_prob)
+        oov =0
+        word = [i for i in word] + ["<E>"]
+        n = len(word)
+        fifo = ["<S>"]*(self.n -1)
+        for ch in word:
+            context = "".join(fifo[(len(fifo) - (self.n - 1)):len(fifo)])
+            try:
+                p += log(self.cpd[context][ch],10)
+            except ValueError:
+                if ch in self.units:
+                    p += log(self.smoothing/ float(self.cfd[context][ch] + self.smoothing*self.U), 10)
                 else:
-                    for term,count in suffix.iteritems():
-                        N = len(probs[prefix])
-                        if term in probs[prefix]:
-                            p += count * log(probs[prefix][term], 2)
-                        else:
-                            p += log(unseen_prob)
-        else:
-            word = [i for i in word] + ["<E>"]
-            fifo = ["<S>"]*(self.n -1)
-            for gram, ch in enumerate(word):
-                context = "".join(fifo[(len(fifo) - (self.n - 1)):len(fifo)])
-                try:
-                    p += log(self.cpd[context].prob(ch))#smooth or unsmooth TODO: make it as a param (evaluate vs. generate) 
-                except ValueError:
-                    return 0.0
-                fifo.append(ch)
-        return gram,p
+                    oov +=1
+            fifo.append(ch)
+        if oov > 0: 
+        	n = 0
+        	p = 0
+        return n,oov,p
                                                             
                                                          

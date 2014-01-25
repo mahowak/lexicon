@@ -1,20 +1,24 @@
-from math import log
+from math import log, exp
 
-def log_prob(model, w):
-  return log(model.evaluate(w), 2.0)
+def logprob(model, words):
+    p = 0.0
+    for w in words:
+        temp_n, temp_oov, temp_p = model.evaluate(w)
+        p += temp_p
+    return p
+
 
 def cross_entropy(model, words):
   W_T = 0.0
   e = 0.0
   n = 0.0
+  oov = 0.0
   for w in words:
-    W_T += float(len(w))
-    temp_n, temp_e = model.evaluate(w)
+    temp_n, temp_oov, temp_e = model.evaluate(w)
     e += temp_e
+    oov += temp_oov
     n += temp_n
-  if W_T is 0.0:
-    return 0
-  return -1.0/n* e
+  return -e/(n-oov)
   
 def perplexity(e):
-	return 2**e
+	return 10**(e)

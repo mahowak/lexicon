@@ -5,6 +5,7 @@ from math import log
 import nltk
 import time
 import random
+import collections
 
 """ --------------nsyll model------------"""
 
@@ -27,22 +28,27 @@ class NsyllModel(LM):
         self.__dict__.update(locals())
         self.n = n
         self.cfd = ConditionalFreqDist()
-        self.cpd = {}
+        self.cpd = collections.defaultdict(lambda: collections.defaultdict(int))
         self.smoothing = 0
+        self.U = 0
+        self.units =[]
         LM.__init__(self)
 
-    def create_model(self, corpus, smoothing = None):
+    def create_model(self, corpus, smoothing = 0):
         """Update cfd using ngrams for syllables"""
+        unigrams = []
         for item in corpus:
              item_ngrams = nltk.ngrams(["<S>"]*(self.n-1) + [i for i in item.split("-")] + ["<E>"], self.n)
              for ng in item_ngrams:
-                 self.cfd["".join(ng[:-1])].inc(ng[-1])
-        if smoothing == None:
-            self.cpd  = ConditionalProbDist(self.cfd, nltk.MLEProbDist)
-        else:
-            self.smoothing = 1
-            m = KatzSmoothing(self.n)
-            self.cpd = m.smooth_cpd(self.cfd)
+                self.cfd["".join(ng[:-1])].inc(ng[-1])
+                unigrams += [ng[-1]]
+        self.U = len(set(unigrams))
+        self.units = set(unigrams)
+        self.smoothing = smoothing
+        for i in self.cfd.keys():
+            for j in self.cfd[i].keys():
+            	self.cpd[i][j] = (self.cfd[i][j] + smoothing) / float(sum(self.cfd[i].values()) + smoothing*self.U)
+                #print i+" "+j, log(self.cpd[i][j],10), self.cfd[i][j]
         LM.create_model(self, corpus, smoothing)
 
     def generate_one(self, n):
@@ -65,32 +71,23 @@ class NsyllModel(LM):
         """ get the log probability of generating a given word under the language model """
         LM.evaluate(self, word)
         p=0
-        gram=0
-        if self.smoothing:
-            grams=nltk.ngrams(["<S>"]*(self.n-1) + [i for i in word.split("-")] + ["<E>"], self.n)
-            probs,unseen_prob = self.cpd
-            cf =  generate_cf(ConditionalFreqDist(), grams)
-            for prefix,suffix in cf.iteritems():
-                gram +=1
-                if prefix not in probs:
-                    p += log(unseen_prob)
+        oov = 0
+        word = word.split("-") + ["<E>"]
+        n = len(word)
+        fifo = ["<S>"]*(self.n -1)
+        for ch in word:
+            context = "".join(fifo[(len(fifo) - (self.n - 1)):len(fifo)])
+            try:
+                p += log(self.cpd[context][ch],10)
+            except ValueError:
+                if ch in self.units:
+                    p += log(self.smoothing/ float(self.cfd[context][ch] + self.smoothing*self.U), 10)
                 else:
-                    for term,count in suffix.iteritems():
-                        N = len(probs[prefix])
-                        if term in probs[prefix]:
-                            p += count * log(probs[prefix][term], 2)
-                        else:
-                            p += log(unseen_prob)
-        else:
-            word = word.split("-") + ["<E>"]
-            fifo = ["<S>"]*(self.n -1)
-            for gram, syll in enumerate(word):
-                context = "".join(fifo[(len(fifo) - (self.n - 1)):len(fifo)])
-                try:
-                    p += log(self.cpd[context].prob(syll))#smooth or unsmooth TODO: make it as a param (evaluate vs. generate) 
-                except ValueError:
-                    return 0.0
-                fifo.append(syll)
-        return gram, p 
+                    oov +=1
+            fifo.append(ch)
+        if oov > 0: 
+        	n =0
+        	p=0
+        return n, oov, p
                                                             
                

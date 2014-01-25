@@ -45,18 +45,18 @@ class PCFG(LM):
             freq, rule = line.split("\t")
             A, B = rule.split(" --> ")
             B = B.rstrip('\n')
-            self.nonterminal_counts[A] += int(freq) 
+            self.nonterminal_counts[A] += float(freq) 
             #print A, B, len(B), freq
             if " " in B: #BINARY RULE
                 B1, B2 = B.split()
-                self.binary_rule_counts[(A,B1,B2)] = int(freq)
-                gram[A][B1+"+"+B2] = int(freq)
-                tot[A] += int(freq)
+                self.binary_rule_counts[(A,B1,B2)] = float(freq)
+                gram[A][B1+"+"+B2] = float(freq)
+                tot[A] += float(freq)
             else:
-                gram[A][B] = int(freq)
-                tot[A] += int(freq)
+                gram[A][B] = float(freq)
+                tot[A] += float(freq)
                 if len(B) == 1: #UNARY RULE
-                    self.unary_rule_counts[(A,B)] = int(freq)
+                    self.unary_rule_counts[(A,B)] = float(freq)
 
         
         for i in gram.keys():
@@ -122,7 +122,7 @@ class PCFG(LM):
       
     
     def evaluate(self, word):
-        return len(re.sub("-","",word)), float(self.parse(word))
+        return len(re.sub("-","",word)), 0, float(self.parse(word))
         #if self.ngram != None:
         #    while self.ngram.evaluate(word)==0:
         #        word, p = self.generate_one(symbol='Word')
