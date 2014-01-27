@@ -19,7 +19,7 @@ from bigmatch import BigMatch
 #from kn import *
 from evaluation import *
 from generation import *
-
+from perplexity import *
 
 
 
@@ -81,8 +81,8 @@ parser.add_argument('--graph', metavar='--g', type=int, nargs='?',
 
 args = parser.parse_args()
 corpus = [i.strip() for i in open(args.corpus, "r").readlines()]
-train = [re.sub(" ","-",i.strip()) for i in open("train_syll.txt", "r").readlines()]
-test = [re.sub(" ","-",i.strip()) for i in open("test_syll.txt", "r").readlines()]
+#train = [re.sub(" ","-",i.strip()) for i in open("train_syll.txt", "r").readlines()]
+#test = [re.sub(" ","-",i.strip()) for i in open("test_syll.txt", "r").readlines()]
 print args.model, len(corpus), "sample", corpus[0]
 
 if args.model == "nphone":
@@ -128,7 +128,16 @@ else: #evaluate /!\ works only with ngrams as now
             sys.exit()
         lm.create_model(train, 0.1)
         print i,"Laplace smoothing", logprob(lm, test), perplexity(cross_entropy(lm, test))
-         
+        if args.model == 'nphone':
+            srilm_train = [" ".join(list(w)) for w in train] 
+            srilm_test = [" ".join(list(w)) for w in test]
+        if args.model == 'nsyll':
+            print "TODO: srilm"
+        print srilm_train[0:10]
+        print i, "srilm wb smoothing ppl, logprob: ", compute(srilm_train, srilm_test, args.n, 'wbdiscount')
+        print i, "srilm add .1 smoothing ppl, logprob ", compute(srilm_train, srilm_test, args.n, 'addsmooth', .1)
+
+
     #evaluate_model(args.corpus, args.iter, args.model, args.n, args.homo, args.train, args.freq)
 #python ngram.py --inputsim=permuted_syllssyll__lemma_english_nphone_1_0_4_8.txt --corpus=notcelex
 

@@ -24,7 +24,7 @@ def turn_to_txt(f, fname):
     if it's already a txt file, check to see if it exists
     '''
     if isinstance(f, list):
-        print "converting to tmp text file"
+        #print "converting to tmp text file"
         outfile = open(fname + '.tmp', 'w')
         for item in f:
             outfile.write(item + "\n")
@@ -46,7 +46,7 @@ def clean_up():
 
 
 
-def compute(train, test, ngramcountlist=NGRAM_COUNT, ngramlist=NGRAM, order=3, smoothing='wbdiscount', add=.1):
+def compute(train, test, order=3, smoothing='wbdiscount', add=.1):
     '''Calculates perplexity between 2 text files (one sentence per line)
     or pass in lists of training and text (which will be converted to tmp txt file)
     returns ppl and log prob from srilm
@@ -62,11 +62,11 @@ def compute(train, test, ngramcountlist=NGRAM_COUNT, ngramlist=NGRAM, order=3, s
             a += ['-' + smoothing + str(o), str(add)]
         else: a += ['-' + smoothing + str(o)]
     
-    print "ngram-count call ", " ".join(a)
+    #print "ngram-count call ", " ".join(a)
     rv = subprocess.call(a)
     
     b = [ngram, '-lm', 'tmp.lm', '-ppl', test, '-order', str(order)]
-    print "ngram call ", " ".join(b)
+    #print "ngram call ", " ".join(b)
     proc= subprocess.Popen(b, stdout=subprocess.PIPE)
     
     out, err = proc.communicate()
@@ -103,7 +103,7 @@ if __name__ == '__main__':
         _usage()
         sys.exit(1)
 
-    print compute(args[0], args[1], ngramcount, ngram)
+    print compute(args[0], args[1])
     
     
     

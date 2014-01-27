@@ -23,7 +23,10 @@ Now we can evaluate from nphone and nsyll by specifying:
 it smoothes the conditional probabilities with Katz's smoothing from katz.py and gt.py
 As now the implementation is ugly and need to be updated, it was just to test that all is working fine.
 
-
+--perplexity.py uses srilm--for any computer used, add srilm path at top of file
+It accepts as input either a training list and a test list (with words already separate and spaced) or a training file and a test file with one word per line.
+Currently can do either addsmooth or wbdiscount. If addsmooth, set the smoothing alpha (currently = .1)
+New smoothing can be easily added by specifying it.
 
 
 **OLD
