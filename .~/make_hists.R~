@@ -1,0 +1,168 @@
+library(ggplot2)
+library(plyr)
+
+setwd('~/Dropbox/lex_clean/isab/rfiles')
+
+fs <- read.csv('~/Dropbox/lex_clean/isab/rlist_to_hist.txt', header=F)
+f <- '4_8_real_lexicon.csv.txt'
+
+makehist <- function(fn, v, title)
+{d <- read.csv(fn)
+ d$avg_lev <- d$avg_lev
+ d$value <- d[ , v]
+real <- d[d$lexicon == 'real', ]
+ sims <- d[d$lexicon != 'real', ]
+ minl <- substr(fn, 1, 1)
+ maxl <- substr(fn, 3, 3)
+ z <- mean(sims$value) - 1.96*sd(sims$value)
+  z2 <- mean(sims$value) + 1.96*sd(sims$value)
+ p <- ggplot(sims, aes(value))
+p <- p + geom_histogram(fill = '#336600') + xlab(v) + theme(legend.position = 'none')
+p <- p + geom_point(data=real, aes(value, 0), size = 3, colour = 'red')   + ggtitle(fn) +
+     geom_vline(xintercept =c(z, z2), linetype = 'longdash') + ggtitle(title)
+print(p)
+}
+
+makehist.permutedsyll <- function(d, v, title)
+{ 
+ d$value <- d[ , v]
+real <- d[d$lexicon == 'real', ]
+ sims <- d[d$lexicon != 'real', ]
+ z <- mean(sims$value) - 1.96*sd(sims$value)
+  z2 <- mean(sims$value) + 1.96*sd(sims$value)
+ p <- ggplot(sims, aes(value))
+p <- p + geom_histogram(fill = '#336600') + xlab(v) + theme(legend.position = 'none')
+p <- p + geom_point(data=real, aes(value, 0), size = 3, colour = 'red')   + 
+     geom_vline(xintercept =c(z, z2), linetype = 'longdash') + ggtitle(title) + facet_grid(. ~ as.factor(syll.num))
+#if (grepl("cv1", fn) )
+# {p <- p + geom_point(data=topngrams, aes(value, 0), size = 3, colour = 'green')  }
+print(p)
+}
+
+## pdf('blick_celexmonos.pdf')
+## for (i in c('mps', 'neighbors', 'avg_lev'))
+## {makehist('4_8_real_lexicon.csv.txt', i)}
+## dev.off()
+
+## pdf('celex_4to8lettes.pdf')
+## for (i in c('mps', 'neighbors', 'avg_lev'))
+## {makehist('lemma_english_nphone_1_0_4_8_3_0_50.txt', i)}
+## dev.off()
+
+## pdf('celex_4to8letters_nomono.pdf')
+## for (i in c('mps', 'neighbors', 'avg_lev'))
+## {makehist('lemma_english_nphone_0_0_4_8_3_0_50.txt', i)}
+## dev.off()
+
+## pdf('blick_ngram_both_matched_hists.pdf')
+## {for (j in c('4_8_lex_thignstomatchon_cv1_iter25_mboth.txt', '4_8_lex_thignstomatchon_cv1_iter25_mngram.txt', '4_8_lex_thignstomatchon_cv1_iter25_mblick.txt', '4_4_lex_thignstomatchon_cv1_iter25_mblick.txt'))
+## for (i in c('mps', 'neighbors', 'avg_lev'))
+## {makehist(j, i)}
+## }
+## dev.off()
+
+pdf('blick_ngram_both_matched_hists_1_neighbors.pdf')
+{for (j in fs$V1)
+for (i in  c('neighbors')) #c('mps', 'neighbors', 'avg_lev'))
+{makehist(j, i, paste(j, i))}
+}
+dev.off()
+
+pdf('blick_ngram_both_matched_hists_4_8_neighbors.pdf')
+{for (j in fs$V1)
+if (grepl('4_8', j, paste(j, i)))
+for (i in  c('neighbors')) #c('mps', 'neighbors', 'avg_lev'))
+{makehist(j, i)}
+}
+dev.off()
+
+pdf('permuted_syll.pdf')
+makehist('4_8_permuted_syllssyll__lemma_english_nphone_1_0_4_8.txt', 'neighbors', 'permuted sylls 4 to 8 length')
+makehist('4_4_permuted_syllssyll__lemma_english_nphone_1_0_4_8.txt', 'neighbors', 'permuted sylls length 4')
+makehist('5_5_permuted_syllssyll__lemma_english_nphone_1_0_4_8.txt', 'neighbors', 'permuted sylls length 5')
+makehist('6_6_permuted_syllssyll__lemma_english_nphone_1_0_4_8.txt', 'neighbors', 'permuted sylls length 6')
+dev.off()
+
+pdf('bigger_epsilon.pdf')
+makehist('4_8_lex_newmatch_11_11_cv1_iter24_mngram.txt', 'neighbors', 'bigger epsilon, matched for ngram')
+dev.off()
+
+pdf('real_blick_lexicon.pdf')
+makehist('blick_real_lexicon.txt_.txt', 'neighbors')
+dev.off()
+
+pdf('neighborhood_hists.pdf')
+makehist('4_8_lex_newmatch_11_11_cv1_iter25_mblick.txt', 'neighbors', '4 - 8 letter words matched for Blick')
+makehist('4_8_lex_newmatch_11_11_cv1_iter25_mngram.txt', 'neighbors', '4 - 8 letter words matched for trigram log prob')
+makehist('4_8_lex_newmatch_11_11_cv1_iter25_mboth.txt', 'neighbors', '4 - 8 letter words matched for Blick and trigram log prob')
+makehist('blick_real_lexicon.txt_.txt', 'neighbors', '4 - 8 letters words from generative model')
+dev.off()
+
+pdf('ngram_for_matching_generated.pdf')
+makehist('4_8_lex_for_matching_generated_cv1_iter25_mngram.txt', 'neighbors', '4-8 letter words for matching generated words')
+makehist('4_4_lex_for_matching_generated_cv1_iter25_mngram.txt', 'neighbors', '4 letter words for matching generated words')
+makehist('5_5_lex_for_matching_generated_cv1_iter25_mngram.txt', 'neighbors', '5 letter words for matching generated words')
+makehist('6_6_lex_for_matching_generated_cv1_iter25_mngram.txt', 'neighbors', '6 letter words for matching generated words')
+dev.off()
+
+
+
+ syll <- read.csv('~/Dropbox/lex_clean/isab/sylls/syll-list.txt')
+perms <- read.csv('indwords_4_8_permuted_syllssyll__lemma_english_nphone_1_0_4_8.txt')
+perms <- cbind(perms, syll)
+d <- perms
+v <- 'neighbors'
+makehist.permutedsyll <- function(d, v, syll, title)
+{
+    d <- d[d$syll.num == syll, ]
+ d$value <- d[ , v]
+real <- d[d$lexicon == 'real', ]
+ sims <- d[d$lexicon != 'real', ]
+ z <- mean(sims$value) - 1.96*sd(sims$value)
+  z2 <- mean(sims$value) + 1.96*sd(sims$value)
+ p <- ggplot(sims, aes(value))
+p <- p + geom_histogram(fill = '#336600') + xlab(v) + theme(legend.position = 'none')
+p <- p + geom_point(data=real, aes(value, 0), size = 3, colour = 'red')   + 
+     geom_vline(xintercept =c(z, z2), linetype = 'longdash') + ggtitle(title) 
+#if (grepl("cv1", fn) )
+# {p <- p + geom_point(data=topngrams, aes(value, 0), size = 3, colour = 'green')  }
+print(p)
+}
+
+e <- ddply(perms, .(lexicon, syll.num), summarise, neighbors=mean(neighbors))
+pdf('perm_by_syllable_length.pdf')
+makehist.permutedsyll(e, 'neighbors', 2, 'permutation lexicon by syllable (2 sylls)')
+makehist.permutedsyll(e, 'neighbors', 3, 'permutation lexicon by syllable (3 sylls)')
+makehist.permutedsyll(e, 'neighbors', 4, 'permutation lexicon by syllable (4 sylls)')
+
+dev.off()
+
+## pdf('blick_ngram_both_matched_hists_nocv.pdf')
+## {for (j in c('4_8_lex_thignstomatchon_cv0_iter25_mboth.txt', '4_8_lex_thignstomatchon_cv0_iter25_mngram.txt', '4_8_lex_thignstomatchon_cv0_iter25_mblick.txt'))
+## for (i in c('mps', 'neighbors', 'avg_lev'))
+## {makehist(j, i)}
+## }
+##dev.off()
+#variance in blick score vs ngram probability
+#syllable models permuted
+#does not work
+read.f <- function(fn)
+{x <- read.csv(fn, header=F)
+ names(x) <- c('lexicon', 'word', 'blick', 'ngram', 'disc')
+return(x)
+}
+
+## a <- read.f('../matchedLexica/info_thignstomatchon_cv1_iter25_mboth.txt')
+## b <- read.f('../matchedLexica/info_thignstomatchon_cv1_iter25_mngram.txt')
+## c <- read.f('../matchedLexica/info_thignstomatchon_cv1_iter25_mblick.txt')
+
+## a$Cat <- 'both'
+## b$Cat <- 'ngram'
+## c$Cat <- 'blick'
+## d <- rbind(a, b, c)
+
+## d$Real <- 0
+## d[d$lexicon < 0, ]$Real <- 1
+
+## ddply(d, .(Real, Cat), summarise, blickmean = mean(blick), ngrammean = mean(ngram))
+#w <- ddply(d, .(Real, Cat, word), summarise, blickmean = mean(blick), ngrammean = mean(ngram), l=length(word))
