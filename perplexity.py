@@ -5,8 +5,8 @@ Using ngram-cout and ngram from SRILM
 '''
 import os, sys, re, tempfile, subprocess, getopt
 
-NGRAM = ["/ISABELLE/srilm/bin/macosx/ngram", "/Users/km/Documents/srilm/bin/macosx/ngram"]
-NGRAM_COUNT = ["/ISABELLE/srilm/bin/macosx/ngram-count", "/Users/km/Documents/srilm/bin/macosx/ngram-count"]
+NGRAM = ["/Users/isa/Desktop/srilm/bin/macosx/ngram", "/Users/km/Documents/srilm/bin/macosx/ngram"]
+NGRAM_COUNT = ["/Users/isa/Desktop/srilm/bin/macosx/ngram-count", "/Users/km/Documents/srilm/bin/macosx/ngram-count"]
 
 
 """set where srilm lives"""
@@ -56,7 +56,7 @@ def compute(train, test, order=3, smoothing='wbdiscount', add=.1):
     
 
 
-    a = [ngramcount, '-text', train, '-lm', 'tmp.lm', '-order', str(order)] 
+    a = [ngramcount, '-text', train, '-lm', 'tmp.lm', '-order', str(order), '-gtmin', '0'] 
     for o in range(1, order + 1):
         if smoothing == 'addsmooth': 
             a += ['-' + smoothing + str(o), str(add)]

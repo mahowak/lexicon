@@ -38,7 +38,10 @@ try:
 except OSError:
     pass
 
-
+try:
+    os.mkdir('evaluation')
+except OSError:
+    pass
 
 
 
@@ -114,30 +117,38 @@ if args.fnc == "generate":
     write_all(lexfile, args.minlength, args.maxlength, args.graph)
     os.system('Rscript make_hists.R')
 else: #evaluate /!\ works only with ngrams as now
+    o = "evaluation/eval_" + args.corpus.split("/")[-1][:-4] + "_cv" +  str(args.cv) + "_iter" + str(args.iter) + "_m" + args.model + "_n" + str(args.n) + ".txt"
+    out = open(o, 'w')
+    out.write("i,smoothing,model,ppl,logprob\n")
     for i in range(args.iter):
         train = random.sample(corpus, int(args.train*len(corpus)))
         test = random.sample(corpus, int((1-args.train)*len(corpus)))
-        if args.model == "nphone":
-            lm= NgramModel(args.n, train)
-        elif args.model == "nsyll":
-            lm = NsyllModel(args.n, train)
-        elif args.model == "pcfg":
-            lm = PCFG(args.grammar, NgramModel(args.n, train))
-        else:
-            print "not yet implemented"
-            sys.exit()
-        lm.create_model(train, 0.1)
-        print i,"Laplace smoothing", logprob(lm, test), perplexity(cross_entropy(lm, test))
+#        if args.model == "nphone":
+#            lm= NgramModel(args.n, train)
+#        elif args.model == "nsyll":
+#            lm = NsyllModel(args.n, train)
+#        elif args.model == "pcfg":
+#            lm = PCFG(args.grammar, NgramModel(args.n, train))
+#        else:
+#            print "not yet implemented"
+#            sys.exit()
+#        lm.create_model(train, 0.1)
+#        print i,"Laplace smoothing", logprob(lm, test), perplexity(cross_entropy(lm, test))
         if args.model == 'nphone':
             srilm_train = [" ".join(list(w)) for w in train] 
             srilm_test = [" ".join(list(w)) for w in test]
         if args.model == 'nsyll':
             srilm_train = [re.sub("-", " ", w) for w in train] 
             srilm_test = [re.sub("-", " ", w) for w in test]
-        print i, "srilm wb smoothing ppl, logprob: ", compute(srilm_train, srilm_test, args.n, 'wbdiscount')
-        print i, "srilm add .1 smoothing ppl, logprob ", compute(srilm_train, srilm_test, args.n, 'addsmooth', .1)
+        wb = compute(srilm_train, srilm_test, args.n, 'wbdiscount')
+        add = compute(srilm_train, srilm_test, args.n, 'addsmooth', .1)
+        out.write(str(i)+","+"srilm_wb"+","+args.model+str(args.n)+","+str(wb[0])+","+str(-wb[1])+"\n")
+        out.write(str(i)+","+"srilm_add"+","+args.model+str(args.n)+","+str(add[0])+","+str(-add[1])+"\n")
 
+        print i, "srilm_wb", args.model, args.n, wb[0], -wb[1]
+        print i, "srilm_add", args.model, args.n, add[0], -add[1]
 
+    os.system('Rscript eval.r')
     #evaluate_model(args.corpus, args.iter, args.model, args.n, args.homo, args.train, args.freq)
 #python ngram.py --inputsim=permuted_syllssyll__lemma_english_nphone_1_0_4_8.txt --corpus=notcelex
 
