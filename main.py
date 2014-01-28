@@ -132,8 +132,8 @@ else: #evaluate /!\ works only with ngrams as now
             srilm_train = [" ".join(list(w)) for w in train] 
             srilm_test = [" ".join(list(w)) for w in test]
         if args.model == 'nsyll':
-            print "TODO: srilm"
-        print srilm_train[0:10]
+            srilm_train = [re.sub("-", " ", w) for w in train] 
+            srilm_test = [re.sub("-", " ", w) for w in test]
         print i, "srilm wb smoothing ppl, logprob: ", compute(srilm_train, srilm_test, args.n, 'wbdiscount')
         print i, "srilm add .1 smoothing ppl, logprob ", compute(srilm_train, srilm_test, args.n, 'addsmooth', .1)
 
