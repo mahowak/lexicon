@@ -92,10 +92,11 @@ class NgramModel(LM):
             try:
                 p += log(self.cpd[context][ch],10)
             except ValueError:
-                if ch in self.units:
-                    p += log(self.smoothing/ float(self.cfd[context][ch] + self.smoothing*self.U), 10)
-                else:
-                    oov +=1
+                return 0.0
+#                if ch in self.units:
+#                    p += log(self.smoothing/ float(self.cfd[context][ch] + self.smoothing*self.U), 10)
+#                else:
+#                    oov +=1
             fifo.append(ch)
         if oov > 0: 
         	n = 0

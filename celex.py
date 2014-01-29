@@ -42,7 +42,7 @@ def clean_word(word):
     """Remove stress and syllable boundaries."""
     word = re.sub("'", "", word)
     word = re.sub('"', "", word)
-    if args.syll != 1: word = re.sub("-", "", word)
+    if args.syll != 1 and args.pcfg!=1: word = re.sub("-", "", word)
     return word
 
 def celex_diphthong_sub(word):
@@ -131,7 +131,14 @@ def build_real_lex(path, lemma, language, mono, homo, minlength, maxlength, freq
     f = open("celexes/" + "_".join([str(i) for i in celex_list]) + ".txt", "w")
     if freq == 0:
         corpus = [c[0] for c in corpus]
-        for line in corpus: f.write(line + "\n")
+        if args.pcfg == 0:
+            for line in corpus: f.write(line + "\n")
+        else:
+            for line in corpus: 
+                l = list(line)
+                for k in l:
+                    f.write(k + " ")
+                f.write("\n")
     else:
         f.write('\n'.join('%s\t%s' % c for c in corpus))
     f.close()
@@ -164,6 +171,7 @@ parser.add_argument('--freq', metavar='--f', type=int, nargs='?',
                      help='add frequency to the output', default=0)
 #parser.add_argument('--corpus', metavar='--c', type=str, nargs='?', help='put corpus file (list of words, one on each lien) to override celex', default='celex')
 parser.add_argument('--syll', metavar='--syll', type=int, nargs='?', help='include syll in celex', default=0)
+parser.add_argument('--pcfg', metavar='--pcfg', type=int, nargs='?', help='format for pcfg', default=0)
 parser.add_argument('--inputsim', metavar='--inputsim', type=str, nargs='?', help='use this if you want to input a file that contains simulated lexicons instead of ngrams. the file should be a csv in format simnum,word', default="none")
 parser.add_argument('--cv', metavar='--cv', type=int, nargs='?', help='put 1 here to match for CV pattern', default=0)
 
@@ -174,6 +182,7 @@ celex_list = [args.lemma, args.language, args.mono, args.homocel, args.minlength
 
 if args.syll == 1: celex_list = ['syll_'] + celex_list
 if args.freq == 1: celex_list = ['freq_'] + celex_list
+if args.pcfg == 1: celex_list = ['pcfg_'] + celex_list
 
 #if args.corpus == 'celex': 
 a = build_real_lex(user_celex_path, args.lemma, args.language, args.mono, args.homocel, args.minlength, args.maxlength, args.freq, celex_list)

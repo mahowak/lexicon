@@ -24,19 +24,45 @@ class PCFG(LM):
         self.reject = 0
         LM.__init__(self)
 
-    def create_model(self, corpus, smoothing = False): # corpus argument doesnt serve here but to match the LM class
+    def create_model(self, corpus, smoothing = 0): # corpus argument doesnt serve here but to match the LM class
         self.ngram.create_model([re.sub("-","",x) for x in corpus])
         g = open(self.grammar_file, 'r')
-        self.format_grammar(g)
-        g.close()
-        g = open("grammars/grammar_formated.txt", 'r')
-        for line in g:
-            line.rstrip('\n')
-            A, B = line.split("\t")
-            self.add_prod(A, B)
-        LM.create_model(self, corpus)
+        self.format_grammar(g, smoothing)
+        LM.create_model(self, corpus, smoothing)
 
-    def format_grammar(self, f):
+
+    def format_grammar(self, f, smoothing):
+        tot = nltk.defaultdict(int)
+        gram = nltk.defaultdict(lambda: nltk.defaultdict(int))
+        lines = f.readlines()[1:-1]
+        for line in lines:
+            p, rule = line.split("\t")
+            A, B = rule.split(" --> ")
+            B = B.rstrip('\n')
+            gram[A][B] = float(p)
+            tot[A] += float(p)
+#            self.prod[A].append((B, float(p)))
+#            self.nonterminal_counts[A] += float(p) 
+            #print A, B, len(B), freq
+#            if " " in B: #BINARY RULE
+#                B1, B2 = B.split()
+#                self.binary_rule_counts[(A,B1,B2)] = float(p)
+#            else:
+#                if len(B) == 1: #UNARY RULE
+#                    self.unary_rule_counts[(A,B)] = float(p)
+        for i in gram.keys():
+            for j in gram[i].keys():
+                p_new = (gram[i][j] + smoothing) / float(tot[i] + smoothing * len(gram[i].keys()))
+                self.prod[i].append((j, p_new))
+                self.nonterminal_counts[i] += float(p_new)
+                if " " in j: #BINARY RULE
+                    B1, B2 = j.split()
+                    self.binary_rule_counts[(i,B1,B2)] = float(p_new)
+                else:
+                    if len(j) == 1: #UNARY RULE
+                        self.unary_rule_counts[(i,j)] = float(p_new)
+
+    def format_grammar_old(self, f):
         #print ">>> Loading cfg counts ..."
         f_out = open("grammars/grammar_formated.txt", 'w')
         gram = nltk.defaultdict(lambda: nltk.defaultdict(int))
@@ -69,6 +95,7 @@ class PCFG(LM):
             f_out.write("\n")
     
     #print ">>> Done and wrote in file"
+    
     def add_prod(self, lhs, rhs):
         """ Add production to the grammar. 'rhs' can
             be several productions separated by '|'.
@@ -96,14 +123,14 @@ class PCFG(LM):
         """
         word = ''
         tot_p = 0
-        if '+' in symbol:
-            s = symbol.split('+')
+        if ' ' in symbol:
+            s = symbol.split(' ')
         else:
             rand_prod, p = weighted_choice(self.prod[symbol])
             tot_p += log(p, 10)
             s =  [x for x in self.prod[symbol][rand_prod][0].strip().split(",")]
         for sym in s:
-            if sym in self.prod or '+' in sym:# for non-terminals, recurse
+            if sym in self.prod or ' ' in sym:# for non-terminals, recurse
                 w, p = self.generate_one(sym)
                 word += w
                 tot_p += p
@@ -165,13 +192,10 @@ class PCFG(LM):
         pi = defaultdict(float) # DP table pi
         bp = {} # back pointers
         N = self.nonterminal_counts.keys() # set of nonterminals
-        
+
         # Base case
         for i in xrange(n):
-            if sum([self.unary_rule_counts[node, x[i]] for node in N]) < 5: # if x[i] is infrequent phone (chracter)
-                c = '_RARE_' # use _RARE_ instead of the actual word
-            else: # x[i] is not infrequent word
-                c = x[i] 
+            c = x[i] 
             for node in N:
                 pi[i, i, node] = self.q_unary(node, c) # if X -> x[i] not in the set of rules, assign 0
        
@@ -202,10 +226,10 @@ class PCFG(LM):
             max_score = 0
             args = None
             for node in N:
-                if max_score < pi[0, n-1, node]:
+                if max_score <= pi[0, n-1, node]:
                     max_score = pi[0, n-1, node]
-                    args = 0, n-1, X
-            return self.recover_tree(x, pi, *args)
+                    args = 0, n-1, node
+            return 0#self.recover_tree(x, pi, bp, *args)
 
     def recover_tree(self, x, pi, bp,  i, j, X):
         """
