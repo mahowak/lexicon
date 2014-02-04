@@ -1,8 +1,31 @@
-Word --> ConsonantI VowelF
-Word --> ConsonantI RhymeF
-Word --> Vowel ConsonantF
-Word --> SyllI Separator
-VowelF --> VowelF VowelF
+Word --> ConsonantsI VowelsF
+Word --> ConsonantsI RhymeF
+Word --> Vowels ConsonantsF
+Word --> SyllI Sylls
+Sylls --> SepSyll Sylls
+Sylls --> Separator SyllF
+SepSyll --> Separator Syll
+Syll --> Vowel Vowels
+Syll --> Vowels ConsonantsC
+Syll --> ConsonantsO Vowels
+Syll --> ConsonantsO Rhyme
+SyllI --> ConsonantsI Vowels
+SyllI --> ConsonantsI Rhyme
+SyllI --> Vowel Vowels
+SyllI --> Vowels ConsonantsC
+SyllF --> Vowels ConsonantsF
+SyllF --> Vowel Vowels
+SyllF --> ConsonantsO VowelsF
+SyllF --> ConsonantsO RhymeF
+Rhyme --> Vowels ConsonantsC
+RhymeF --> Vowels ConsonantsF
+VowelF --> VowelF VowelsF
+Vowels --> Vowel Vowels
+ConsonantsI --> ConsonantI ConsonantsI
+ConsonantsO --> ConsonantO ConsonantsO
+ConsonantsC --> ConsonantC ConsonantsC
+ConsonantsF --> ConsonantF ConsonantsF
+Separator --> -
 VowelF --> q
 VowelF --> U
 VowelF --> 5
@@ -22,13 +45,25 @@ VowelF --> #
 VowelF --> V
 VowelF --> @
 VowelF --> I
-RhymeF --> Vowel ConsonantF
-Syll --> Syll Separator
-Syll --> Vowel Vowel
-Syll --> Vowel ConsonantC
-Syll --> Separator SyllF
-Syll --> ConsonantO Vowel
-Syll --> ConsonantO Rhyme
+VowelsF --> q
+VowelsF --> U
+VowelsF --> 5
+VowelsF --> E
+VowelsF --> $
+VowelsF --> Q
+VowelsF --> P
+VowelsF --> c
+VowelsF --> u
+VowelsF --> H
+VowelsF --> {
+VowelsF --> i
+VowelsF --> 1
+VowelsF --> 3
+VowelsF --> ~
+VowelsF --> #
+VowelsF --> V
+VowelsF --> @
+VowelsF --> I
 Syll --> q
 Syll --> U
 Syll --> 5
@@ -48,7 +83,6 @@ Syll --> #
 Syll --> V
 Syll --> @
 Syll --> I
-ConsonantI --> ConsonantI ConsonantI
 ConsonantI --> T
 ConsonantI --> R
 ConsonantI --> r
@@ -77,7 +111,6 @@ ConsonantI --> S
 ConsonantI --> _
 ConsonantI --> w
 ConsonantI --> J
-ConsonantF --> ConsonantF ConsonantF
 ConsonantF --> T
 ConsonantF --> R
 ConsonantF --> r
@@ -106,7 +139,6 @@ ConsonantF --> S
 ConsonantF --> _
 ConsonantF --> w
 ConsonantF --> J
-Vowel --> Vowel Vowel
 Vowel --> q
 Vowel --> U
 Vowel --> 5
@@ -126,10 +158,81 @@ Vowel --> #
 Vowel --> V
 Vowel --> @
 Vowel --> I
-SyllI --> ConsonantI Vowel
-SyllI --> ConsonantI Rhyme
-SyllI --> Vowel Vowel
-SyllI --> Vowel ConsonantC
+ConsonantsI --> T
+ConsonantsI --> R
+ConsonantsI --> r
+ConsonantsI --> l
+ConsonantsI --> j
+ConsonantsI --> C
+ConsonantsI --> v
+ConsonantsI --> N
+ConsonantsI --> m
+ConsonantsI --> Z
+ConsonantsI --> F
+ConsonantsI --> x
+ConsonantsI --> b
+ConsonantsI --> h
+ConsonantsI --> z
+ConsonantsI --> n
+ConsonantsI --> g
+ConsonantsI --> k
+ConsonantsI --> t
+ConsonantsI --> d
+ConsonantsI --> D
+ConsonantsI --> f
+ConsonantsI --> s
+ConsonantsI --> p
+ConsonantsI --> S
+ConsonantsI --> _
+ConsonantsI --> w
+ConsonantsI --> J
+ConsonantsF --> T
+ConsonantsF --> R
+ConsonantsF --> r
+ConsonantsF --> l
+ConsonantsF --> j
+ConsonantsF --> C
+ConsonantsF --> v
+ConsonantsF --> N
+ConsonantsF --> m
+ConsonantsF --> Z
+ConsonantsF --> F
+ConsonantsF --> x
+ConsonantsF --> b
+ConsonantsF --> h
+ConsonantsF --> z
+ConsonantsF --> n
+ConsonantsF --> g
+ConsonantsF --> k
+ConsonantsF --> t
+ConsonantsF --> d
+ConsonantsF --> D
+ConsonantsF --> f
+ConsonantsF --> s
+ConsonantsF --> p
+ConsonantsF --> S
+ConsonantsF --> _
+ConsonantsF --> w
+ConsonantsF --> J
+Vowels --> q
+Vowels --> U
+Vowels --> 5
+Vowels --> E
+Vowels --> $
+Vowels --> Q
+Vowels --> P
+Vowels --> c
+Vowels --> u
+Vowels --> H
+Vowels --> {
+Vowels --> i
+Vowels --> 1
+Vowels --> 3
+Vowels --> ~
+Vowels --> #
+Vowels --> V
+Vowels --> @
+Vowels --> I
 SyllI --> q
 SyllI --> U
 SyllI --> 5
@@ -149,13 +252,6 @@ SyllI --> #
 SyllI --> V
 SyllI --> @
 SyllI --> I
-Separator --> Separator Syll
-Separator --> Separator SyllF
-Separator --> -
-SyllF --> Vowel ConsonantF
-SyllF --> Vowel Vowel
-SyllF --> ConsonantO VowelF
-SyllF --> ConsonantO RhymeF
 SyllF --> q
 SyllF --> U
 SyllF --> 5
@@ -175,7 +271,6 @@ SyllF --> #
 SyllF --> V
 SyllF --> @
 SyllF --> I
-ConsonantO --> ConsonantO ConsonantO
 ConsonantO --> T
 ConsonantO --> R
 ConsonantO --> r
@@ -204,8 +299,6 @@ ConsonantO --> S
 ConsonantO --> _
 ConsonantO --> w
 ConsonantO --> J
-Rhyme --> Vowel ConsonantC
-ConsonantC --> ConsonantC ConsonantC
 ConsonantC --> T
 ConsonantC --> R
 ConsonantC --> r
@@ -234,3 +327,59 @@ ConsonantC --> S
 ConsonantC --> _
 ConsonantC --> w
 ConsonantC --> J
+ConsonantsO --> T
+ConsonantsO --> R
+ConsonantsO --> r
+ConsonantsO --> l
+ConsonantsO --> j
+ConsonantsO --> C
+ConsonantsO --> v
+ConsonantsO --> N
+ConsonantsO --> m
+ConsonantsO --> Z
+ConsonantsO --> F
+ConsonantsO --> x
+ConsonantsO --> b
+ConsonantsO --> h
+ConsonantsO --> z
+ConsonantsO --> n
+ConsonantsO --> g
+ConsonantsO --> k
+ConsonantsO --> t
+ConsonantsO --> d
+ConsonantsO --> D
+ConsonantsO --> f
+ConsonantsO --> s
+ConsonantsO --> p
+ConsonantsO --> S
+ConsonantsO --> _
+ConsonantsO --> w
+ConsonantsO --> J
+ConsonantsC --> T
+ConsonantsC --> R
+ConsonantsC --> r
+ConsonantsC --> l
+ConsonantsC --> j
+ConsonantsC --> C
+ConsonantsC --> v
+ConsonantsC --> N
+ConsonantsC --> m
+ConsonantsC --> Z
+ConsonantsC --> F
+ConsonantsC --> x
+ConsonantsC --> b
+ConsonantsC --> h
+ConsonantsC --> z
+ConsonantsC --> n
+ConsonantsC --> g
+ConsonantsC --> k
+ConsonantsC --> t
+ConsonantsC --> d
+ConsonantsC --> D
+ConsonantsC --> f
+ConsonantsC --> s
+ConsonantsC --> p
+ConsonantsC --> S
+ConsonantsC --> _
+ConsonantsC --> w
+ConsonantsC --> J

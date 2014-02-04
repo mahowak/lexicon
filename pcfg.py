@@ -141,7 +141,7 @@ class PCFG(LM):
     def filter_word(self):
         word, p = self.generate_one(symbol='Word')
         if self.ngram != None:
-            while self.ngram.evaluate(re.sub("-","",word))==0 or word[-1] == "-":
+            while self.ngram.evaluate(re.sub("-","",word))==0:
                 word, p = self.generate_one(symbol='Word')
                 self.reject +=1
         #self.p_word[word] = p
@@ -149,7 +149,9 @@ class PCFG(LM):
       
     
     def evaluate(self, word):
-        return len(re.sub("-","",word)), 0, float(self.parse(word))
+        oov, p = self.parse(word)
+        #print word, p
+        return len(re.sub("-","",word)), float(oov), float(p)
         #if self.ngram != None:
         #    while self.ngram.evaluate(word)==0:
         #        word, p = self.generate_one(symbol='Word')
@@ -168,7 +170,7 @@ class PCFG(LM):
         """
         
     def parse(self, word):
-        return json.dumps(self.CKY(list(word)))
+        return self.CKY(list(word))
     
     
     def q(self, x, y1, y2):
@@ -221,7 +223,7 @@ class PCFG(LM):
         
         # Return
         if pi[0, n-1, 'Word']:
-            return self.recover_tree(x, pi, bp, 0, n-1, 'Word')
+            return 0, self.recover_tree(x, pi, bp, 0, n-1, 'Word')
         else: # if the tree does not have the start symbol 'S' as the root
             max_score = 0
             args = None
@@ -229,7 +231,7 @@ class PCFG(LM):
                 if max_score <= pi[0, n-1, node]:
                     max_score = pi[0, n-1, node]
                     args = 0, n-1, node
-            return 0#self.recover_tree(x, pi, bp, *args)
+            return 1, 0#self.recover_tree(x, pi, bp, *args)
 
     def recover_tree(self, x, pi, bp,  i, j, X):
         """

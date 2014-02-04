@@ -112,7 +112,7 @@ if args.fnc == "generate":
 
 
     lm.create_model(corpus)
-    o = "Lexicons/lex_" + args.corpus.split("/")[-1][:-4] + "_cv" +  str(args.cv) + "_iter" + str(args.iter) + "_m" + args.model + ".txt"
+    o = "Lexicons/lex_" + args.corpus.split("/")[-1][:-4] + "_cv" +  str(args.cv) + "_iter" + str(args.iter) + "_m" + args.model + "_n" + str(args.n) + ".txt"
     if args.model.startswith("bigmatch") == 0:
         lexfile = write_lex_file(o, corpus, args.cv, args.iter, lm, args.homo)
     else:
