@@ -4,59 +4,68 @@ from math import log, sqrt, exp
 import nltk
 import random, sys, re
 import time, datetime
-from katz import *
 import collections
+import itertools 
 
 """ --------------ngram model------------"""
 
-def multichooser(context,fd):
+def multichooser(context,pd,n):
     """ Return random choice from multinomial cfd. """
     context = "".join(context)
     cumprob = 0
     rand = random.random()
-    possibles = fd[context].samples()
+    possibles = pd[n][context].keys()
     possibles.sort()
     for possible in possibles:
-        cumprob += fd[context].freq(possible)
+        cumprob += pd[n][context][possible]
         if cumprob > rand: return possible
     return
 
 
 
 class NgramModel(LM):
-    def __init__(self, n, corpus):
+    def __init__(self, n, corpus, gen = 0):
         self.n = n
         self.__dict__.update(locals())
-        self.cfd = ConditionalFreqDist()
-        self.cpd  = collections.defaultdict(lambda: collections.defaultdict(int))
+        self.cfd = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(int)))
+        self.cpd  = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(int)))
         self.smoothing = 0
-        self.U = 0
-        self.units =[]
+        self.generation = gen
+        self.alpha = collections.defaultdict(lambda: collections.defaultdict(int))
         LM.__init__(self)
-
-       # self.cpd_smooth = ConditionalProbDist()#self.cfd, nltk.LaplaceProbDist, 35)#issue with SimpleGoodTuringProbDist but also with other smoothing functions, does not work as is for n = 1
 
     def create_model(self, corpus, smoothing = 0):
         """Update cfd using ngrams"""
         unigrams = []
         for item in corpus:
-            item_ngrams = nltk.ngrams(["<S>"]*(self.n-1) + [i for i in item] + ["<E>"], self.n)
-            for ng in item_ngrams:
-            	self.cfd["".join(ng[:-1])].inc(ng[-1])
-                unigrams += [ng[-1]]
-        #for i in self.cfd.keys():
-         #   val = self.cfd[i].values()
-          #  keys = self.cfd[i].keys()
-           # random.shuffle(val)
-          #  temp = dict(zip(keys, val))
-          #  for k, v in temp.iteritems():
-           #     self.cfd[i][k] = v
-        self.U = len(set(unigrams))
-        self.units = set(unigrams)
+            for k in range(1,self.n+1):
+                item_ngrams = nltk.ngrams(["("]*(k-1)  + [i for i in item] + [")"], k)
+                for ng in item_ngrams:
+                    self.cfd[k]["".join(ng[:-1])][ng[-1]] += 1
+                    unigrams += [ng[-1]]
+        U = len(set(unigrams))
+        units = set(unigrams)
         self.smoothing = smoothing
-        for i in self.cfd.keys():
-            for j in self.cfd[i].keys():
-            	self.cpd[i][j] = (self.cfd[i][j] + smoothing) / float(sum(self.cfd[i].values()) + smoothing*self.U)
+        for k in self.cfd.keys():
+            for i in self.cfd[k].keys():
+                pbak = 0
+                for j in self.cfd[k][i].keys():
+                    self.cpd[k][i][j] = (self.cfd[k][i][j] + smoothing) / float(sum(self.cfd[k][i].values()) + smoothing*U)
+                    pbak += self.cpd[k-1][i[1:]][j]
+                if self.smoothing:
+                    self.alpha[k][i] = (1 - sum(self.cpd[k][i].values())) / float(1 - pbak)
+        
+        #for generation with smoothing 
+        if self.smoothing and self.generation:
+            grams = [''.join(i) for i in itertools.product(units, repeat = self.n)]
+            for g in grams:
+                self.cpd[self.n][g[:-1]][g[-1]] = self.backoff(self.n, g[:-1], g[-1])
+            for k in range(1,self.n):
+                grams_border = [''.join(i) for i in itertools.product(units, repeat = k)]
+                for g in grams_border:
+                    s = "".join(["("]*(self.n - k) + [g])
+                    self.cpd[self.n][s[:-1]][s[-1]] = self.backoff(self.n, s[:-1], s[-1])
+        
         LM.create_model(self, corpus, smoothing)
 
     def generate(self, ngen = 1):
@@ -68,12 +77,14 @@ class NgramModel(LM):
         
     def generate_one(self, n):
         """Generate one word from ngram model."""
-        word = ["<S>"]*(self.n - 1)
+        word = ["("]*(self.n - 1)
         while True:
             context = "".join(word[(len(word) - (self.n -1)):len(word)])
-            word = word + [multichooser(context, self.cfd)]
-            if word[-1] == "<E>":
+            word = word + [multichooser(context, self.cpd, self.n)]
+            if word[-1] == ")":
                 break
+            if word[-1] == "(":
+                word = ["("]*(self.n - 1)
         return "".join(word[(self.n - 1):-1])
 
 
@@ -82,25 +93,28 @@ class NgramModel(LM):
         """ get the log probability of generating a given word under the language model """
         LM.evaluate(self, word)
         p=0
-        gram=0
         oov =0
-        word = [i for i in word] + ["<E>"]
-        n = len(word)
-        fifo = ["<S>"]*(self.n -1)
+        word = [i for i in word] + [")"]
+        l = len(word)
+        fifo = ["("]*(self.n -1)
         for ch in word:
             context = "".join(fifo[(len(fifo) - (self.n - 1)):len(fifo)])
-            try:
-                p += log(self.cpd[context][ch],10)
-            except ValueError:
-                return 0.0
-#                if ch in self.units:
-#                    p += log(self.smoothing/ float(self.cfd[context][ch] + self.smoothing*self.U), 10)
-#                else:
-#                    oov +=1
+            pbak =  self.backoff(self.n, context, ch)
+            if pbak != 0:
+                p += log(pbak,10)
+            else:
+                oov +=1
             fifo.append(ch)
-        if oov > 0: 
-        	n = 0
-        	p = 0
-        return n,oov,p
-                                                            
-                                                         
+        return l,oov,p
+
+    def backoff(self, n, h, c):
+        if c in self.cpd[n][h].keys():#seen ngram
+            return self.cpd[n][h][c]
+        elif h not in self.alpha[n].keys():#context never been observed
+            return self.backoff(n-1, h[1:], c)
+        elif c not in self.cpd[n-1][h[1:]].keys():#unseen phone in previous n
+            return self.alpha[n][h] * self.backoff(n-1, h[1:], c)
+        else:
+            return self.alpha[n][h] * self.cpd[n-1][h[1:]][c]
+            
+

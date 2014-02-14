@@ -19,7 +19,7 @@ SyllF --> ConsonantsO VowelsF
 SyllF --> ConsonantsO RhymeF
 Rhyme --> Vowels ConsonantsC
 RhymeF --> Vowels ConsonantsF
-VowelF --> VowelF VowelsF
+VowelsF --> VowelF VowelsF
 Vowels --> Vowel Vowels
 ConsonantsI --> ConsonantI ConsonantsI
 ConsonantsO --> ConsonantO ConsonantsO

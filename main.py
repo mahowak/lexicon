@@ -7,7 +7,6 @@ import Levenshtein
 import time, datetime
 import pickle
 t = time.time()
-import random, sys, re
 import collections
 from calc_stats import *
 import copy
@@ -54,22 +53,16 @@ parser.add_argument('--n', metavar='--n', type=int, nargs='?',
                     help='n for ngram', default=3)
 parser.add_argument('--homo', metavar='h', type=int, nargs='?',
                     help='0 to exclude homophones being generated, 1 for homophones allowed', default=0)
-#parser.add_argument('--lemma', metavar='--lem', type=str, nargs='?',
-#                    help='lemma or wordform in celex', default="lemma")
-#parser.add_argument('--language', metavar='--lang', type=str, nargs='?',
-#                    help='', default="english")
 parser.add_argument('--model', metavar='--m', type=str, nargs='?',
                     help='should be nphone for ngram model', default="nphone")
 parser.add_argument('--minlength', metavar='--minl', type=int, nargs='?',
-                   help='minimum length of word allowed from celex', default=3)
+                   help='minimum length of word allowed from celex', default=0)
 parser.add_argument('--maxlength', metavar='--maxl', type=int, nargs='?',
-                    help='maximum length of word allowed from celex', default=8)
+                    help='maximum length of word allowed from celex', default=40)
 parser.add_argument('--iter', metavar='--i', type=int, nargs='?',
                     help='number of lexicons to generate', default=2)
 parser.add_argument('--corpus', metavar='--c', type=str, nargs='?', 
                     help='put corpus file - list of words, one on each line')
-parser.add_argument('--syll', metavar='--syll', type=int, nargs='?', 
-                    help='include syll in celex', default=0)
 parser.add_argument('--cv', metavar='--cv', type=int, nargs='?',
                     help='put 1 here to match for CV pattern', default=0)
 parser.add_argument('--grammar', metavar='--g', type=str, nargs='?',
@@ -82,27 +75,28 @@ parser.add_argument('--freq', metavar='--freq', type=int, nargs='?',
                        help='use frequency based lm', default=0)
 parser.add_argument('--graph', metavar='--g', type=int, nargs='?',
                         help='output graph', default=0)
+parser.add_argument('--smoothing', metavar='--s', type=float, nargs='?',
+                        help='discount for add-smoothing', default=0.1)
+
 
 args = parser.parse_args()
 corpus = [i.strip() for i in open(args.corpus, "r").readlines()]
-#train = [re.sub(" ","-",i.strip()) for i in open("train_syll.txt", "r").readlines()]
-#test = [re.sub(" ","-",i.strip()) for i in open("test_syll.txt", "r").readlines()]
 print args.model, len(corpus), "sample", corpus[0]
 
 
 if args.fnc == "generate":
     if args.model == "nphone":
-        lm = NgramModel(args.n, corpus)
+        lm = NgramModel(args.n, corpus, 1)
     elif args.model == "nsyll":
         if args.corpus.startswith("celexes/syll"):
-            lm = NsyllModel(args.n, corpus)
+            lm = NsyllModel(args.n, corpus, 1)
         else:
             print "Use syll__ file for this model"
             sys.exit()
     elif args.model == "pcfg":
         if args.corpus.startswith("celexes/pcfg"):
-            call(["./pcfg/io","-d","1","-g", args.grammar, args.corpus],stdout = open('grammars/gram_pcfg.wlt', 'w'))
-            lm = PCFG('grammars/gram_pcfg.wlt', NgramModel(args.n, corpus))
+            print call(["./pcfg/io","-d","1","-g", args.grammar, args.corpus],stdout = open('grammars/gram_pcfg.wlt', 'w'))
+            lm = PCFG('grammars/gram_pcfg.wlt')
             corpus = [re.sub(" ","",x) for x in corpus]
         else:
             print "Use pcfg__ file for this model"
@@ -111,7 +105,7 @@ if args.fnc == "generate":
         lm = BigMatch(args.n, corpus, args.corpus[:-4] + "_tomatch.txt")
 
 
-    lm.create_model(corpus)
+    lm.create_model(corpus, args.smoothing)
     o = "Lexicons/lex_" + args.corpus.split("/")[-1][:-4] + "_cv" +  str(args.cv) + "_iter" + str(args.iter) + "_m" + args.model + "_n" + str(args.n) + ".txt"
     if args.model.startswith("bigmatch") == 0:
         lexfile = write_lex_file(o, corpus, args.cv, args.iter, lm, args.homo)
@@ -125,19 +119,25 @@ else: #evaluate /!\ works only with ngrams as now
     out = open(o, 'w')
     out.write("i,smoothing,model,ppl,logprob\n")
     for i in range(args.iter):
+        #train = [re.sub(" ","-",i.strip()) for i in open("train.txt", "r").readlines()]
+        #test = [re.sub(" ","-",i.strip()) for i in open("test.txt", "r").readlines()]
         train = random.sample(corpus, int(args.train*len(corpus)))
         test = random.sample(corpus, int((1-args.train)*len(corpus)))
-#        if args.model == "nphone":
-#            lm= NgramModel(args.n, train)
-#        elif args.model == "nsyll":
-#            lm = NsyllModel(args.n, train)
-#        elif args.model == "pcfg":
-#            lm = PCFG(args.grammar, NgramModel(args.n, train))
-#        else:
-#            print "not yet implemented"
-#            sys.exit()
-#        lm.create_model(train, 0.1)
-#        print i,"Laplace smoothing", logprob(lm, test), perplexity(cross_entropy(lm, test))
+        if args.model == "nphone":
+            lm= NgramModel(args.n, train)
+        elif args.model == "nsyll":
+            lm = NsyllModel(args.n, train)
+        elif args.model == "pcfg":
+            temp = 'temp_file'
+            f = open(temp, 'w')
+            print >> f, "\n".join(str(i) for i in train)
+            call(["./pcfg/io","-d","1","-p","0","-g", args.grammar, temp],stdout = open('grammars/gram_pcfg.wlt', 'w'))
+            lm = PCFG('grammars/gram_pcfg.wlt')
+        else:
+            print "not yet implemented"
+            sys.exit()
+        lm.create_model(train, args.smoothing)
+        
         if args.model != 'pcfg':
             if args.model == 'nphone':
                 srilm_train = [" ".join(list(w)) for w in train] 
@@ -146,20 +146,16 @@ else: #evaluate /!\ works only with ngrams as now
                 srilm_train = [re.sub("-", " ", w) for w in train] 
                 srilm_test = [re.sub("-", " ", w) for w in test]
             wb = compute(srilm_train, srilm_test, args.n, 'wbdiscount')
-            add = compute(srilm_train, srilm_test, args.n, 'addsmooth', .1)
+            add = compute(srilm_train, srilm_test, args.n, 'addsmooth', args.smoothing)
             out.write(str(i)+","+"srilm_wb"+","+args.model+str(args.n)+","+str(wb[0])+","+str(-wb[1])+"\n")
             out.write(str(i)+","+"srilm_add"+","+args.model+str(args.n)+","+str(add[0])+","+str(-add[1])+"\n")
             print i, "wb", args.model, args.n, wb[0], -wb[1]
-            print i, "add", args.model, args.n, add[0], -add[1]
+            print i, "add", args.model, args.n, add[0], -add[1] 
+            print i, "add-manual", args.model, args.n, perplexity(cross_entropy(lm, test)), logprob(lm, test)
         else:
-            temp = 'temp_file'
-            f = open(temp, 'w')
-            print >> f, "\n".join(str(i) for i in train)
-            call(["./pcfg/io","-d","1","-p","0","-g", args.grammar, temp],stdout = open('grammars/gram_pcfg.wlt', 'w'))
-            lm = PCFG('grammars/gram_pcfg.wlt', NgramModel(args.n, train))
             test = [re.sub(" ","",x) for x in test]
-            lm.create_model(train, 0.001)
-            out.write(str(i)+","+"add"+","+args.model+str(args.n)+","+str(perplexity(cross_entropy(lm, test)))+","+str(logprob(lm,test))+"\n")
+            print i, "add-manual", args.model, args.n, perplexity(cross_entropy(lm, test)), logprob(lm, test)
+#            out.write(str(i)+","+"add"+","+args.model+str(args.n)+","+str(perplexity(cross_entropy(lm, test)))+","+str(logprob(lm,test))+"\n")
             os.remove('temp_file')
     os.system('Rscript eval.r')
     #evaluate_model(args.corpus, args.iter, args.model, args.n, args.homo, args.train, args.freq)

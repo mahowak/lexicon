@@ -604,9 +604,9 @@ set_rule_weights(grammar g, FLOAT *rule_counts, int VariationalBayes)
   for (i=0; i<g->nrules; i++) {
     if (rule_counts[i] > 0.0) {
       if (VariationalBayes)
-	g->weights[i] = exp(digamma(rule_counts[i]) - digamma(parent_sum[g->rules[i]->e[0]]));
+	g->weights[i] = exp(digamma(rule_counts[i]));// - digamma(parent_sum[g->rules[i]->e[0]]));
       else
-	g->weights[i] = rule_counts[i]/parent_sum[g->rules[i]->e[0]];
+	g->weights[i] = rule_counts[i];///parent_sum[g->rules[i]->e[0]];
     }
     else
       g->weights[i] = 0.0;

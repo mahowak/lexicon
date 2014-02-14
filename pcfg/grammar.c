@@ -166,7 +166,7 @@ write_rule_values(FILE *fp, grammar g, si_t si, FLOAT *values, FLOAT threshold)
 
   for (ruleid=0; ruleid<g->nrules; ruleid++) {
     assert(g->rules[ruleid]->n>=2);
-    if (values[ruleid] > threshold) {
+    if (values[ruleid] >= threshold) {
       fprintf(fp, "%g\t%s " REWRITES, (float) values[ruleid], 
 	      si_index_string(si, g->rules[ruleid]->e[0]));
       for (child=1; child<g->rules[ruleid]->n; child++)
@@ -655,5 +655,5 @@ jitter_weights(grammar g, FLOAT jitter)
 {
   int i;
   for (i=0; i<g->nrules; i++) 
-    g->weights[i] += g->weights[i]*(jitter*rand())/RAND_MAX;
+    g->weights[i] += g->weights[i]*(jitter*rand());//RAND_MAX;
 }

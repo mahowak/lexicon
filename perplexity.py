@@ -56,11 +56,11 @@ def compute(train, test, order=3, smoothing='wbdiscount', add=.1):
     
 
 
-    a = [ngramcount, '-text', train, '-lm', 'tmp.lm', '-order', str(order), '-gtmin', '0'] 
+    a = [ngramcount, '-text', train, '-lm', 'tmp.lm', '-order', str(order)] 
     for o in range(1, order + 1):
         if smoothing == 'addsmooth': 
-            a += ['-' + smoothing + str(o), str(add)]
-        else: a += ['-' + smoothing + str(o)]
+            a += ['-' + smoothing + str(o), str(add), '-gt'+str(o)+'min', '0']
+        else: a += ['-' + smoothing + str(o), '-gt'+str(o)+'min', '0']
     
     #print "ngram-count call ", " ".join(a)
     rv = subprocess.call(a)

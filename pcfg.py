@@ -25,7 +25,8 @@ class PCFG(LM):
         LM.__init__(self)
 
     def create_model(self, corpus, smoothing = 0): # corpus argument doesnt serve here but to match the LM class
-        self.ngram.create_model([re.sub("-","",x) for x in corpus])
+        if self.ngram != None:
+            self.ngram.create_model([re.sub("-","",x) for x in corpus])
         g = open(self.grammar_file, 'r')
         self.format_grammar(g, smoothing)
         LM.create_model(self, corpus, smoothing)
@@ -231,7 +232,7 @@ class PCFG(LM):
                 if max_score <= pi[0, n-1, node]:
                     max_score = pi[0, n-1, node]
                     args = 0, n-1, node
-            return 1, 0#self.recover_tree(x, pi, bp, *args)
+            return self.recover_tree(x, pi, bp, *args)
 
     def recover_tree(self, x, pi, bp,  i, j, X):
         """
