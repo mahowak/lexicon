@@ -2,6 +2,7 @@ Word --> ConsonantsI VowelsF
 Word --> ConsonantsI RhymeF
 Word --> Vowels ConsonantsF
 Word --> SyllI Sylls
+Word --> Vowel Vowels
 Sylls --> SepSyll Sylls
 Sylls --> Separator SyllF
 SepSyll --> Separator Syll
@@ -26,6 +27,25 @@ ConsonantsO --> ConsonantO ConsonantsO
 ConsonantsC --> ConsonantC ConsonantsC
 ConsonantsF --> ConsonantF ConsonantsF
 Separator --> -
+Word --> q
+Word --> U
+Word --> 5
+Word --> E
+Word --> $
+Word --> Q
+Word --> P
+Word --> c
+Word --> u
+Word --> H
+Word --> {
+Word --> i
+Word --> 1
+Word --> 3
+Word --> ~
+Word --> #
+Word --> V
+Word --> @
+Word --> I
 VowelF --> q
 VowelF --> U
 VowelF --> 5
