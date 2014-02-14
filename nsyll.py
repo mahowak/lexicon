@@ -73,7 +73,7 @@ class NsyllModel(LM):
         word = ["("]*(self.n - 1)
         while True:
             context = "".join(word[(len(word) - (self.n -1)):len(word)])
-            word = word + ["-"] + [multichooser(context, self.cfd, self.n)]
+            word = word + ["-"] + [multichooser(context, self.cpd, self.n)]
             if word[-1] == ")":
                 break
             if word[-1] == "(":
