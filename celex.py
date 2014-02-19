@@ -9,8 +9,8 @@ import pickle
 t = time.time()
 import random, sys, re
 
-#user_celex_path = "/Users/km/Documents/celex2/"
-user_celex_path = "/Users/isa/Desktop/PhD/3. Projets/10. Etude du Lexique/celex_raw/" 
+user_celex_path = "/Users/km/Documents/celex2/"
+#user_celex_path = "/Users/isa/Desktop/PhD/3. Projets/10. Etude du Lexique/celex_raw/" 
 
 """produces file with header: "lexicon,homophones,mps,neighbors,avg_lev,num_words\n"
 
@@ -98,7 +98,7 @@ def celex_pron_loc(language, lemma):
 
 def extract_celex_info(line, freqs, language="english", lemma="lemma", model="ortho"):
     """ Return celex word (ortho or phonemic) and its freq from celex line. """
-    if line[1].isalpha() and line[1].islower() and "-" not in line[1] and "." not in line[1] and "'" not in line[1] and " " not in line[1]:#we dont take proper names but careful this will not work well for German
+    if line[1].isalpha() and ((line[1].islower()) | (language == 'german')) and "-" not in line[1] and "." not in line[1] and "'" not in line[1] and " " not in line[1]:#we dont take proper names but careful this will not work well for German
         return line[celex_pron_loc(language, lemma)], float(freqs[line[0]]) #pron, frequency
     return
 
