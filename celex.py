@@ -9,8 +9,8 @@ import pickle
 t = time.time()
 import random, sys, re
 
-user_celex_path = "/Users/km/Documents/celex2/"
-#user_celex_path = "/Users/isa/Desktop/PhD/3. Projets/10. Etude du Lexique/celex_raw/" 
+#user_celex_path = "/Users/km/Documents/celex2/"
+user_celex_path = "/Users/isa/Desktop/PhD/3. Projets/10. Etude du Lexique/celex_raw/" 
 
 """produces file with header: "lexicon,homophones,mps,neighbors,avg_lev,num_words\n"
 
@@ -53,6 +53,10 @@ def celex_diphthong_sub(word):
     word = re.sub("7", "I@", word)
     word = re.sub("8", "E@", word)
     word = re.sub("9", "U@", word)
+    word = re.sub("X", "Oy", word)
+    word = re.sub("W", "ai", word)
+    word = re.sub("B", "au", word)
+    word = re.sub("K", "EI", word)
     return word
 """ --------------Celex reading functions-------------- """
 
@@ -98,7 +102,7 @@ def celex_pron_loc(language, lemma):
 
 def extract_celex_info(line, freqs, language="english", lemma="lemma", model="ortho"):
     """ Return celex word (ortho or phonemic) and its freq from celex line. """
-    if line[1].isalpha() and ((line[1].islower()) | (language == 'german')) and "-" not in line[1] and "." not in line[1] and "'" not in line[1] and " " not in line[1]:#we dont take proper names but careful this will not work well for German
+    if line[1].isalpha() and ((line[1].islower()) | (language == 'german')) and "-" not in line[1] and "." not in line[1] and "'" not in line[1] and " " not in line[1]:
         return line[celex_pron_loc(language, lemma)], float(freqs[line[0]]) #pron, frequency
     return
 
@@ -117,8 +121,9 @@ def build_real_lex(path, lemma, language, mono, homo, minlength, maxlength, freq
     print celex_path
     corpus = build_celex_corpus(celex_path, language, lemma, model, mono)
     corpus = [c for c in corpus if float(c[1]) > 0]
+    print len(corpus)
     corpus = [(clean_word(c[0]), c[1]) for c in corpus] #reduce celex to just pronunciation
-    corpus =  [(celex_diphthong_sub(c[0]), c[1]) for c in corpus if "c" not in c[0] and "q" not in c[0] and "0" not in c[0] and "~" not in c[0]]
+    corpus =  [(celex_diphthong_sub(c[0]), c[1]) for c in corpus if "c" not in c[0] and "q" not in c[0] and "0" not in c[0] and "~" not in c[0] and "^" not in c[0] and "*" not in c[0] and "<" not in c[0] and ((language == 'english') | ("_" not in c[0]))]
     corpus = [c for c in corpus if (len(re.sub("-", "", c[0])) >= minlength and len(re.sub("-", "", c[0])) <= maxlength)]
     dict_corpus = nltk.defaultdict(int)
     for c in corpus:

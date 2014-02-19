@@ -11,7 +11,8 @@ if (file.exists(FOLDERID)) {FOLDER <- FOLDERID} else {FOLDER<-FOLDERKM}
 setwd(paste(FOLDER, "lexicon/", sep=""))
 
 dat.files <- list.files('rfiles', full.names=TRUE) # read file names with full paths
-lengths = c(4,5,6,7,8)
+lengths = seq(1, 10, 1)
+
 
 makehist.global <- function(fn, v, title)
 {d <- read.csv(fn)
@@ -48,11 +49,26 @@ print(p)
 
 for (f in dat.files)
     {
-pdf(paste("PDFs/", substr(f, 8, nchar(f)), ".pdf", sep=""))
+
 if (grepl('global', f))
-    {makehist.global(f, 'neighbors', f)}
-else {for (l in lengths)
-    {makehist.ind(f, 'neighbors', f, l)}
+    {
+    	pdf(paste("PDFs/", substr(f, 8, nchar(f)), ".pdf", sep=""))
+    	makehist.global(f, 'neighbors', f)
+    	dev.off()
+    	#d <- read.csv(f)
+    	# print(f)
+    	# real <- d[d$lexicon == 'real', ]
+ 		# sims <- d[d$lexicon != 'real', ]
+    	# print(mean(real$homophones_type))
+    	# print(mean(real$homophones_token))
+    	}
+if (grepl('indwords', f))
+	{
+		
+	   	pdf(paste("PDFs/", substr(f, 8, nchar(f)), ".pdf", sep=""))
+		for (l in lengths)
+    	{makehist.ind(f, 'neighbors', f, l)}
+    	dev.off()
 }
-dev.off()
+
 }

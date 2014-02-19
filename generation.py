@@ -18,14 +18,32 @@ def get_cv(word, cv = 0):
     
 def generate_correct_number(corpus, homo, lm):
     """Generate number of words to match length, handle homophones being generated"""
+    lengths = nltk.defaultdict(lambda: nltk.defaultdict(int))
     lengths_needed = nltk.defaultdict(int)
+
     for item in corpus:
+        lengths[get_cv(item)][len(item.split("-"))] += 1
         lengths_needed[get_cv(item)] += 1
     newwords = []
     newwords2 = []
-    exist =0
+    exist = nltk.defaultdict(int)
+#    print lengths_needed
 #    hom = dict((i,corpus.count(i)) for i in corpus if corpus.count(i) > 1)
 #    ratio = sum(hom.values())/float(len(hom)+1)
+
+#    for i in lengths_needed.keys():
+#        while lengths_needed[i] > 0:
+#            words = lm.generate(i)
+#            for w in words:
+#                if homo == 1 or (w not in newwords and re.sub("-","",w) not in newwords2):
+#                    lengths_needed[i] -= 1
+#                    newwords += [w]
+#                    newwords2 += [re.sub("-", "", w)]
+#                    if re.sub("-","",w) in corpus:
+#                        exist[len(re.sub("-","",w))] +=1
+#    print exist
+#    return newwords
+
     while True:
         words = lm.generate()
         for w in words:
@@ -39,14 +57,14 @@ def generate_correct_number(corpus, homo, lm):
 #                        ratio_temp = 0
 #                    if (ratio_temp <= (ratio + 0.1) and len(hom_new) <= len(hom)) or w not in newwords:
                     lengths_needed[get_cv(w)] += -1
-                    if sum([lengths_needed[j] for j in lengths_needed.keys()]) %1000 == 0:
-                        print sum([lengths_needed[j] for j in lengths_needed.keys()])
+#                    if sum([lengths_needed[j] for j in lengths_needed.keys()]) %1000 == 0:
+#                        print sum([lengths_needed[j] for j in lengths_needed.keys()])
                     newwords += [w]
                     newwords2 += [re.sub("-", "", w)]
                     if w in corpus:
-                        exist +=1
+                        exist[len(w)] +=1
             elif sum([lengths_needed[j] for j in lengths_needed.keys()]) == 0: 
-                print "nb of real words", exist
+                print "nb of real words", sum(exist.values())
                 return newwords
 
 
@@ -59,6 +77,7 @@ def write_lex_file(o, corpus, cv, iter, lm, homo):
     for i in range(iter):
         gen_lex= generate_correct_number(corpus, homo, lm)
         for w in gen_lex:
+            #print re.sub(" ","", w)
             outfile.write(str(i) + "," +  re.sub("-","",w) + "\n")
         print "generated lexicon: ", str(i), logprob(lm, gen_lex)
     outfile.close()

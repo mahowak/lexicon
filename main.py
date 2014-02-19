@@ -148,15 +148,15 @@ else: #evaluate /!\ works only with ngrams as now
             wb = compute(srilm_train, srilm_test, args.n, 'wbdiscount')
             add = compute(srilm_train, srilm_test, args.n, 'addsmooth', args.smoothing)
             out.write(str(i)+","+"srilm_wb"+","+args.model+str(args.n)+","+str(wb[0])+","+str(-wb[1])+"\n")
-            out.write(str(i)+","+"srilm_add"+","+args.model+str(args.n)+","+str(add[0])+","+str(-add[1])+"\n")
+            out.write(str(i)+","+"add"+","+args.model+str(args.n)+","+str(add[0])+","+str(-add[1])+"\n")
             print i, "wb", args.model, args.n, wb[0], -wb[1]
             print i, "add", args.model, args.n, add[0], -add[1] 
             print i, "add-manual", args.model, args.n, perplexity(cross_entropy(lm, test)), logprob(lm, test)
         else:
             test = [re.sub(" ","",x) for x in test]
             print i, "add-manual", args.model, args.n, perplexity(cross_entropy(lm, test)), logprob(lm, test)
-#            out.write(str(i)+","+"add"+","+args.model+str(args.n)+","+str(perplexity(cross_entropy(lm, test)))+","+str(logprob(lm,test))+"\n")
             os.remove('temp_file')
+    out.write(str(i)+","+"srilm_add"+","+args.model+str(args.n)+","+str(perplexity(cross_entropy(lm, test)))+","+str(logprob(lm,test))+"\n")
     os.system('Rscript eval.r')
     #evaluate_model(args.corpus, args.iter, args.model, args.n, args.homo, args.train, args.freq)
 #python ngram.py --inputsim=permuted_syllssyll__lemma_english_nphone_1_0_4_8.txt --corpus=notcelex

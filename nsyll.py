@@ -31,6 +31,8 @@ class NsyllModel(LM):
         self.alpha = collections.defaultdict(lambda: collections.defaultdict(int))
         self.smoothing = 0
         self.generation = gen
+        self.mini=1
+        self.minalpha = 1
         LM.__init__(self)
 
     def create_model(self, corpus, smoothing = 0):
@@ -38,7 +40,7 @@ class NsyllModel(LM):
         unigrams = []
         for k in range(1,self.n+1):
             for item in corpus:
-                 item_ngrams = nltk.ngrams(["("]*(k-1) + [i for i in item.split("-")] + [")"], k)
+                 item_ngrams = nltk.ngrams(["["]*(k-1) + [i for i in item.split("-")] + ["]"], k)
                  for ng in item_ngrams:
                     self.cfd[k]["-".join(ng[:-1])][ng[-1]] += 1#.inc(ng[-1])
                     unigrams += [ng[-1]]
@@ -50,9 +52,14 @@ class NsyllModel(LM):
                 pbak = 0
                 for j in self.cfd[k][i].keys():
             	    self.cpd[k][i][j] = (self.cfd[k][i][j] + smoothing) / float(sum(self.cfd[k][i].values()) + smoothing*U)
+                    if self.cpd[k][i][j] < self.mini:
+                        self.mini = self.cpd[k][i][j]
                     pbak += self.cpd[k-1]["-".join(i.split("-")[1:])][j]
                 if self.smoothing:
                     self.alpha[k][i] = (1 - sum(self.cpd[k][i].values())) / float(1 - pbak)
+                    if self.alpha[k][i] < self.minalpha and self.alpha[k][i] > 0:
+                        self.minalpha = self.alpha[k][i]
+        print "mini", self.mini*self.minalpha
 
         #for generation with smoothing 
         if self.smoothing and self.generation:
@@ -62,7 +69,7 @@ class NsyllModel(LM):
             for k in range(1,self.n):
                 grams_border = [i for i in itertools.product(units, repeat = k)]
                 for g in grams_border:
-                    s = ["("]*(self.n - k) + [g]
+                    s = ["["]*(self.n - k) + [g]
                     self.cpd[self.n]['-'.join(s[:-1])][s[-1]] = self.backoff(self.n, '-'.join(s[:-1]), s[-1])
  
 
@@ -70,13 +77,13 @@ class NsyllModel(LM):
 
     def generate_one(self, n):
         """Generate one word from ngram model."""
-        word = ["("]*(self.n - 1)
+        word = ["["]*(self.n - 1)
         while True:
-            context = "".join(word[(len(word) - (self.n -1)):len(word)])
+            context = "-".join(word[(len(word) - (self.n -1)):len(word)])
             word = word + ["-"] + [multichooser(context, self.cpd, self.n)]
-            if word[-1] == ")":
+            if word[-1] == "]":
                 break
-            if word[-1] == "(":
+            if word[-1] == "[" or word[-1] == None:
                 word = ["("]*(self.n - 1)
         return "".join(word[(self.n):-2])
 
@@ -94,13 +101,14 @@ class NsyllModel(LM):
         oov =0
         word = [i for i in word.split("-")] + [")"]
         l = len(word)
-        fifo = ["("]*(self.n -1)
+        fifo = ["["]*(self.n -1)
         for ch in word:
             context = "-".join(fifo[(len(fifo) - (self.n - 1)):len(fifo)])
             pbak =  self.backoff(self.n, fifo, ch)
             if pbak != 0:
                 p += log(pbak,10)
             else:
+                p += log(self.mini*self.minalpha, 10)
                 oov +=1
             fifo.append(ch)
         return l,oov,p
