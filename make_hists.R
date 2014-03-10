@@ -10,6 +10,7 @@ if (file.exists(FOLDERID)) {FOLDER <- FOLDERID} else {FOLDER<-FOLDERKM}
 
 setwd(paste(FOLDER, "lexicon/", sep=""))
 
+#setwd('~/Dropbox/lexicon')
 dat.files <- list.files('rfiles', full.names=TRUE) # read file names with full paths
 lengths = seq(1, 10, 1)
 
@@ -52,8 +53,11 @@ for (f in dat.files)
 
 if (grepl('global', f))
     {
+        print(f)
     	pdf(paste("PDFs/", substr(f, 8, nchar(f)), ".pdf", sep=""))
     	makehist.global(f, 'neighbors', f)
+        makehist.global(f, 'avg_cluster', f)
+        makehist.global(f, 'transitivity', f)
     	dev.off()
     	#d <- read.csv(f)
     	# print(f)
@@ -64,7 +68,7 @@ if (grepl('global', f))
     	}
 if (grepl('indwords', f))
 	{
-		
+		print(f)
 	   	pdf(paste("PDFs/", substr(f, 8, nchar(f)), ".pdf", sep=""))
 		for (l in lengths)
     	{makehist.ind(f, 'neighbors', f, l)}
