@@ -12,6 +12,7 @@ import random, sys, re
 from networkx import *
 import networkx as nx
 import matplotlib.pyplot as plt
+from collections import *
 
 """Take in simulated lexicons file with -1 for real lexicon and 0-N for simulated lexicon
 and output lexical stats"""
@@ -19,6 +20,12 @@ try:
     os.mkdir('rfiles')
 except OSError: 
     pass
+
+def find_minimal_pair_diff(word1, word2):
+    """ return minimal difference, only use when you know it's an mp"""
+    for i in range(len(word1)):
+        if word1[i] != word2[i]: return sorted(set([word1[i], word2[i]]))
+
 
 
 def write_lex_stats(b, num, f, f2, graph= False):
@@ -28,6 +35,7 @@ def write_lex_stats(b, num, f, f2, graph= False):
     neighbors = 0
     homophones = 0
     lev_total = 0
+    specific_mps = defaultdict(int)
     ndict = nltk.defaultdict(int)
     mdict = nltk.defaultdict(int)
     hdict = nltk.defaultdict(int)
@@ -49,7 +57,8 @@ def write_lex_stats(b, num, f, f2, graph= False):
             neighbors += 1
             ndict[item[0]] += 1#*log(dict_b[item[1]])
             ndict[item[1]] += 1#*log(dict_b[item[0]])
-            if len(item[0]) == len(item[1]): 
+            if len(item[0]) == len(item[1]): #if it's a minimal pair
+                specific_mps["_".join(find_minimal_pair_diff(item[0], item[1]))] += 1                
                 mps += 1
                 mdict[item[0]] += 1#*log(dict_b[item[1]])
                 mdict[item[1]] += 1#*log(dict_b[item[0]])
@@ -66,7 +75,7 @@ def write_lex_stats(b, num, f, f2, graph= False):
         nx.draw_networkx(g,pos, with_labels = False,  node_size = 40, edge_color = '0.8', node_color='k')
 #        nx.draw_networkx_nodes(g,pos, node_size=40)
         plt.savefig('graph/' + str(num))
-    f.write(",".join([str(x) for x in [num, len(hdict), len(b) - (len(uniq) - len(hdict)) - 1 , mps, neighbors, lev_total/total, len(b), nx.average_clustering(g), nx.transitivity(g) ]]) + "\n")
+    f.write(",".join([str(x) for x in [num, len(hdict), len(b) - (len(uniq) - len(hdict)) - 1 , mps, neighbors, lev_total/total, len(b), nx.average_clustering(g), nx.transitivity(g), specific_mps["b_p"], specific_mps["d_t"], specific_mps["g_k"]  ]]) + "\n")
     for item in b:
         f2.write(",".join([str(num), str(item), str(hdict[item]), str(mdict[item]/(hdict[item] + 1.)), str(ndict[item]/(hdict[item] + 1.)), str(len(item)) ]) + "\n")
     return
@@ -76,7 +85,7 @@ def write_all(inputsim, minlength, maxlength, graph):
     ###global file
     ftowrite = inputsim.split("/")[-1][:-4]
     f = open("rfiles/" + "global_" + ftowrite + ".txt", "w")
-    f.write("lexicon,homophones_type, homophones_token ,mps,neighbors,avg_lev,num_words,avg_cluster,transitivity\n")
+    f.write("lexicon,homophones_type, homophones_token ,mps,neighbors,avg_lev,num_words,avg_cluster,transitivity,bppair,tdpair,kgpair\n")
     ###word-level stats
     f2 = open("rfiles/" + "indwords_" + ftowrite + ".txt", "w")
     f2.write("lexicon,word,homophones,mps,neighbors,length\n")
