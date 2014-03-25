@@ -1,6 +1,7 @@
 from nltk import *
 import random, sys, re, os
 from math import log, sqrt, exp
+import math
 import nltk
 import argparse
 import itertools
@@ -13,6 +14,7 @@ from networkx import *
 import networkx as nx
 import matplotlib.pyplot as plt
 from collections import *
+import numpy as np
 
 """Take in simulated lexicons file with -1 for real lexicon and 0-N for simulated lexicon
 and output lexical stats"""
@@ -25,6 +27,16 @@ def find_minimal_pair_diff(word1, word2):
     """ return minimal difference, only use when you know it's an mp"""
     for i in range(len(word1)):
         if word1[i] != word2[i]: return sorted(set([word1[i], word2[i]]))
+
+def entropy_from_dict(d):
+    """Input dictionary, return the entropy."""
+    prob = [float(i)/sum(d.values()) for i in d.values()]
+    return sum([- p * math.log(p, 2) for p in prob ])
+
+def num_ambiguous(d):
+    """Find how many values in the dict are 1.
+    A word is unique at that length if it has a 1 in its start_dict."""
+    return float(sum([i for i in d.values() if i != 1]))
 
 
 
@@ -40,9 +52,16 @@ def write_lex_stats(b, num, f, f2, graph= False):
     mdict = nltk.defaultdict(int)
     hdict = nltk.defaultdict(int)
     uniq = nltk.defaultdict(int)
+    start_dict = defaultdict(dict)
+    for k in range(5):
+        start_dict[k] = defaultdict(int)
     g = nx.Graph()
     g.l = {}
-#   dict_b = dict((t[0], float(t[1])) for t in b)
+    for item in b:
+        for i in range(5):
+            if i < len(item):
+                start_dict[i][item[:(i + 1)]] += 1
+    print start_dict[3]
     for item in itertools.combinations(b, 2):
         lev = Levenshtein.distance(item[0], item[1])
         g.add_node(item[0])
@@ -75,9 +94,9 @@ def write_lex_stats(b, num, f, f2, graph= False):
         nx.draw_networkx(g,pos, with_labels = False,  node_size = 40, edge_color = '0.8', node_color='k')
 #        nx.draw_networkx_nodes(g,pos, node_size=40)
         plt.savefig('graph/' + str(num))
-    f.write(",".join([str(x) for x in [num, len(hdict), len(b) - (len(uniq) - len(hdict)) - 1 , mps, neighbors, lev_total/total, len(b), nx.average_clustering(g), nx.transitivity(g), specific_mps["b_p"], specific_mps["d_t"], specific_mps["g_k"]  ]]) + "\n")
+    f.write(",".join([str(x) for x in [num, len(hdict), len(b) - (len(uniq) - len(hdict)) - 1 , mps, neighbors, lev_total/total, len(b), nx.average_clustering(g), nx.transitivity(g), specific_mps["b_p"], specific_mps["d_t"], specific_mps["g_k"], entropy_from_dict(start_dict[0]), entropy_from_dict(start_dict[1]), entropy_from_dict(start_dict[2]), entropy_from_dict(start_dict[3]), entropy_from_dict(start_dict[4]), 1 - num_ambiguous(start_dict[0])/len(b), 1 - num_ambiguous(start_dict[1])/len(b), 1 - num_ambiguous(start_dict[2])/len(b), 1 - num_ambiguous(start_dict[3])/len(b), 1 - num_ambiguous(start_dict[4])/len(b)  ]]) + "\n")
     for item in b:
-        f2.write(",".join([str(num), str(item), str(hdict[item]), str(mdict[item]/(hdict[item] + 1.)), str(ndict[item]/(hdict[item] + 1.)), str(len(item)) ]) + "\n")
+        f2.write(",".join([str(num), str(item), str(hdict[item]), str(mdict[item]/(hdict[item] + 1.)), str(ndict[item]/(hdict[item] + 1.)), str(len(item)), str(start_dict[0][item[:1]]), str(start_dict[1][item[:2]]), str(start_dict[2][item[:3]]), str(start_dict[3][item[:4]]), str(start_dict[4][item[:5]]) ]) + "\n")
     return
 
 
@@ -85,10 +104,10 @@ def write_all(inputsim, minlength, maxlength, graph):
     ###global file
     ftowrite = inputsim.split("/")[-1][:-4]
     f = open("rfiles/" + "global_" + ftowrite + ".txt", "w")
-    f.write("lexicon,homophones_type, homophones_token ,mps,neighbors,avg_lev,num_words,avg_cluster,transitivity,bppair,tdpair,kgpair\n")
+    f.write("lexicon,homophones_type, homophones_token ,mps,neighbors,avg_lev,num_words,avg_cluster,transitivity,bppair,tdpair,kgpair,1entropy,2entropy,3entropy,4entropy,5entropy,pctunique1,pctunique2,pctunique3,pctunique4,pctunique5\n")
     ###word-level stats
     f2 = open("rfiles/" + "indwords_" + ftowrite + ".txt", "w")
-    f2.write("lexicon,word,homophones,mps,neighbors,length\n")
+    f2.write("lexicon,word,homophones,mps,neighbors,length,numthatshareletter1,numthatshareletter2,numthatshareletter3,numthatshareletter4,numthatshareletter5\n")
     inputlist = nltk.defaultdict(list)
     lines = [line.strip().split(",") for line in open(inputsim).readlines()]
     lines = [line for line in lines if len(re.sub("-","",line[1])) >= minlength and len(re.sub("-","",line[1])) <= maxlength]
