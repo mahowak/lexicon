@@ -76,7 +76,7 @@ p <- p + geom_point(data=real, aes(value, 0), size = 3, colour = 'red')   + ggti
 print(p)
 }
 
-for (x in c('mps', 'neihbors', 'numthatshareletter1', 'numthatshareltter2', 'numthatshareletter3', 'numthatshareletter4', 'numthatshareletter5'))
+for (x in c('mps', 'neighbors', 'numthatshareletter1', 'numthatshareletter2', 'numthatshareletter3', 'numthatshareletter4', 'numthatshareletter5'))
     {
         pdf(paste('stats_', x, '.pdf', sep=''))
         for (y in seq(2, 7))
