@@ -1,9 +1,15 @@
 library(ggplot2)
 library(reshape)
-library(lme4.0)
-library(dplyr)
+library(lme4)
+library(plyr)
 
-setwd("/Users/km/Dropbox/lexicon/analysis")
+FOLDERID <- "~/Desktop/"
+FOLDERKM <- "~/Dropbox/"
+
+
+if (file.exists(FOLDERID)) {FOLDER <- FOLDERID} else {FOLDER<-FOLDERKM}
+
+setwd(paste(FOLDER, "lexicon/analysis", sep=""))
 
 dat <- list.files('../rfiles/all_runs')
 ind <- dat[grep('^ind', dat)]
