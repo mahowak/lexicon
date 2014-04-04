@@ -1,0 +1,3 @@
+i,smoothing,model,ppl,logprob
+0,srilm_wb,nphone50.01,7.22331,-7824.81
+0,add,nphone50.01,6.43624,-7368.26
