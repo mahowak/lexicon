@@ -53,15 +53,18 @@ def write_lex_stats(b, num, f, f2, graph= False):
     hdict = nltk.defaultdict(int)
     uniq = nltk.defaultdict(int)
     start_dict = defaultdict(dict)
+    end_dict = defaultdict(dict)
     for k in range(5):
         start_dict[k] = defaultdict(int)
+        end_dict[k] = defaultdict(int)
     g = nx.Graph()
     g.l = {}
     for item in b:
         for i in range(5):
             if i < len(item):
                 start_dict[i][item[:(i + 1)]] += 1
-    print start_dict[3]
+                end_dict[i][item[-(i + 1):]] += 1
+    #print start_dict[3]
     for item in itertools.combinations(b, 2):
         lev = Levenshtein.distance(item[0], item[1])
         g.add_node(item[0])
@@ -94,9 +97,10 @@ def write_lex_stats(b, num, f, f2, graph= False):
         nx.draw_networkx(g,pos, with_labels = False,  node_size = 40, edge_color = '0.8', node_color='k')
 #        nx.draw_networkx_nodes(g,pos, node_size=40)
         plt.savefig('graph/' + str(num))
-    f.write(",".join([str(x) for x in [num, len(hdict), len(b) - (len(uniq) - len(hdict)) - 1 , mps, neighbors, lev_total/total, len(b), nx.average_clustering(g), nx.transitivity(g), specific_mps["b_p"], specific_mps["d_t"], specific_mps["g_k"], entropy_from_dict(start_dict[0]), entropy_from_dict(start_dict[1]), entropy_from_dict(start_dict[2]), entropy_from_dict(start_dict[3]), entropy_from_dict(start_dict[4]), 1 - num_ambiguous(start_dict[0])/len(b), 1 - num_ambiguous(start_dict[1])/len(b), 1 - num_ambiguous(start_dict[2])/len(b), 1 - num_ambiguous(start_dict[3])/len(b), 1 - num_ambiguous(start_dict[4])/len(b)  ]]) + "\n")
+    f.write(",".join([str(x) for x in [num, len(hdict), len(b) - (len(uniq) - len(hdict)) - 1 , mps, neighbors, lev_total/total, len(b), nx.average_clustering(g), nx.transitivity(g), specific_mps["b_p"], specific_mps["d_t"], specific_mps["g_k"]] + [entropy_from_dict(start_dict[i]) for i in range(5)] + [1 - num_ambiguous(start_dict[i])/len(b) for i in range(5)] + [entropy_from_dict(end_dict[i]) for i in range(5)] + [1 - num_ambiguous(end_dict[i])/len(b) for i in range(5)]]) + "\n")
+
     for item in b:
-        f2.write(",".join([str(num), str(item), str(hdict[item]), str(mdict[item]/(hdict[item] + 1.)), str(ndict[item]/(hdict[item] + 1.)), str(len(item)), str(start_dict[0][item[:1]]), str(start_dict[1][item[:2]]), str(start_dict[2][item[:3]]), str(start_dict[3][item[:4]]), str(start_dict[4][item[:5]]) ]) + "\n")
+        f2.write(",".join([str(num), str(item), str(hdict[item]), str(mdict[item]/(hdict[item] + 1.)), str(ndict[item]/(hdict[item] + 1.)), str(len(item)), str(start_dict[0][item[:1]]), str(start_dict[1][item[:2]]), str(start_dict[2][item[:3]]), str(start_dict[3][item[:4]]), str(start_dict[4][item[:5]]) ] + [str(start_dict[i][item[:-(i+1)]]) for i in range(5)]) + "\n")
     return
 
 
@@ -104,10 +108,10 @@ def write_all(inputsim, minlength, maxlength, graph):
     ###global file
     ftowrite = inputsim.split("/")[-1][:-4]
     f = open("rfiles/" + "global_" + ftowrite + ".txt", "w")
-    f.write("lexicon,homophones_type, homophones_token ,mps,neighbors,avg_lev,num_words,avg_cluster,transitivity,bppair,tdpair,kgpair,1entropy,2entropy,3entropy,4entropy,5entropy,pctunique1,pctunique2,pctunique3,pctunique4,pctunique5\n")
+    f.write("lexicon,homophones_type, homophones_token ,mps,neighbors,avg_lev,num_words,avg_cluster,transitivity,bppair,tdpair,kgpair,1entropy,2entropy,3entropy,4entropy,5entropy,pctunique1,pctunique2,pctunique3,pctunique4,pctunique5,1endentropy,2endentropy,3endentropy,4endentropy,5endentropy,pctendunique1,pctendunique2,pctendunique3,pctendunique4,pctendunique5\n")
     ###word-level stats
     f2 = open("rfiles/" + "indwords_" + ftowrite + ".txt", "w")
-    f2.write("lexicon,word,homophones,mps,neighbors,length,numthatshareletter1,numthatshareletter2,numthatshareletter3,numthatshareletter4,numthatshareletter5\n")
+    f2.write("lexicon,word,homophones,mps,neighbors,length,numthatshareletter1,numthatshareletter2,numthatshareletter3,numthatshareletter4,numthatshareletter5,numthatshareendletter1,numthatshareendletter2,numthatshareendletter3,numthatshareendletter4,numthatshareendletter5\n")
     inputlist = nltk.defaultdict(list)
     lines = [line.strip().split(",") for line in open(inputsim).readlines()]
     lines = [line for line in lines if len(re.sub("-","",line[1])) >= minlength and len(re.sub("-","",line[1])) <= maxlength]
