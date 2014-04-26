@@ -1,0 +1,59 @@
+This is BibTeX, Version 0.99d (TeX Live 2011)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: lex.aux
+The style file: apacite.bst
+Reallocated glb_str_ptr (elt_size=4) to 20 items from 10.
+Reallocated global_strs (elt_size=5001) to 20 items from 10.
+Reallocated glb_str_end (elt_size=4) to 20 items from 10.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated wiz_functions (elt_size=4) to 9000 items from 6000.
+Database file #1: /Users/km/Dropbox/lyx/refs.bib
+apacite.bst [2012/02/25 v6.01 APA bibliography style]
+Warning--No journal in luce1986neighborhoods
+Warning--No journal in piantadosi2012information
+Warning--No journal in steriade1997phonetics
+You've used 39 entries,
+            6735 wiz_defined-function locations,
+            1484 strings with 16559 characters,
+and the built_in function-call counts, 67093 in all, are:
+= -- 8522
+> -- 539
+< -- 2950
++ -- 2895
+- -- 79
+* -- 4141
+:= -- 11703
+add.period$ -- 165
+call.type$ -- 39
+change.case$ -- 678
+chr.to.int$ -- 0
+cite$ -- 81
+duplicate$ -- 1680
+empty$ -- 2839
+format.name$ -- 831
+if$ -- 13180
+int.to.chr$ -- 0
+int.to.str$ -- 82
+missing$ -- 0
+newline$ -- 959
+num.names$ -- 312
+pop$ -- 1184
+preamble$ -- 1
+purify$ -- 163
+quote$ -- 0
+skip$ -- 4782
+stack$ -- 0
+substring$ -- 3214
+swap$ -- 1016
+text.length$ -- 104
+text.prefix$ -- 0
+top$ -- 1
+type$ -- 3504
+warning$ -- 3
+while$ -- 303
+width$ -- 0
+write$ -- 1143
+(There were 3 warnings)
