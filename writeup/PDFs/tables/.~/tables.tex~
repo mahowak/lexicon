@@ -1,0 +1,27 @@
+\documentclass[11pt]{article}
+
+\usepackage{graphicx,amsmath,amssymb,subfigure,url,xspace}
+\newcommand{\eg}{e.g.,\xspace}
+\newcommand{\bigeg}{E.g.,\xspace}
+\newcommand{\etal}{\textit{et~al.\xspace}}
+\newcommand{\etc}{etc.\@\xspace}
+\newcommand{\ie}{i.e.,\xspace}
+\newcommand{\bigie}{I.e.,\xspace}
+
+\title{title}
+\author{Author Name}
+
+\begin{document}
+\maketitle
+
+\include{../pct_positive.txt}
+
+\bibliographystyle{plain}
+\bibliography{literature.bib}
+
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 

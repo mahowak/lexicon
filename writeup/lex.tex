@@ -48,20 +48,30 @@ have similar names (perhaps \textit{dog} and \textit{tog}). Such a system would 
 perceptual confusability since those words are often used in similar contexts and so context alone would not
 always be able to disambiguate the words.}
 
-Exceptions to the arbitrariness of linguistic symbols are few and, in some sense, prove the rule. For
-instance, there is a tendency in English for \textit{gl-} words to be associated with light reflectance as in
-``glimmer,'' ``gleam,'' and ``glisten'' \citep{bergen_psychological_2004}. There are additionally
-cross-linguistic correspondences between form and meaning, such as a tendency for words referring to smallness
-to contain high vowels \citep{hinton2006sound,sapir1929study}. More broadly, it has been shown that speakers
-can distinguish between different classes of words, such as concrete versus abstract nouns, based on phonetic
-properties \citep{reilly_arbitrary_2012}. These examples are notable not for their regularity, but for their
-rarity and lack of systematicity. Even representations of animal noises, for instance, differ across languages
-(compare English ``cockadoodledoo'' to Spanish ``cocorico''). Languages' choice of non-onomatopoeic words is
-even more the result of historical accident: there is no systematic reason why we call a dog a \textit{dog}
-and a cat a \textit{cat} instead of the other way around, or instead of \textit{chien} and \textit{chat}. As a
-result of this widespread arbitrariness, there are many degrees of freedom in how a lexicon is structured.
-Lexicons can vary in their distribution of word lengths, in their distribution of phonemes, in how they carve
-out the semantic space, what wordforms they choose, and in many other properties.
+Exceptions to the arbitrariness of linguistic symbols are few and, in
+some sense, prove the rule in that they tend to be language-specific
+and have little intrinsic explanation. For instance, there is a
+tendency in English for \textit{gl-} words to be associated with light
+reflectance as in ``glimmer,'' ``gleam,'' and ``glisten''
+\citep{bergen_psychological_2004}. There are additionally
+cross-linguistic correspondences between form and meaning, such as a
+tendency for words referring to smallness to contain high vowels
+\citep{hinton2006sound,sapir1929study}. More broadly, it has been
+shown that speakers can distinguish between different classes of
+words, such as concrete versus abstract nouns, based on phonetic
+properties \citep{reilly_arbitrary_2012}. These examples are notable
+not for their regularity, but for their rarity and lack of
+systematicity. Even representations of animal noises, for instance,
+differ across languages (compare English ``cockadoodledoo'' to Spanish
+``cocorico''). Languages' choice of non-onomatopoeic words is even
+more the result of historical accident: there is no systematic reason
+why we call a dog a \textit{dog} and a cat a \textit{cat} instead of
+the other way around, or instead of \textit{chien} and \textit{chat}.
+As a result of this widespread arbitrariness, there are many degrees
+of freedom in how a lexicon is structured. Lexicons can vary in their
+distribution of word lengths, in their distribution of phonemes, in
+how they carve out the semantic space, what wordforms they choose, and
+in many other properties.
 
 The existence of an information storage and processing system that allows such a high degree of freedom and
 arbitrariness is unusual in human cognition. The way in which languages use this freedom is potentially
@@ -127,6 +137,7 @@ the true statistical forces of human languages.}.
 
 
 \section{Neighborhood and frequency effects} 
+
 
 As a first pass at evaluating the extent to which languages show a preference for re-use, we investigated
 whether (a) words that are orthographically likely are more likely to be frequent than words that are less
@@ -499,20 +510,6 @@ simulated lexicon. We can then look at the difference between the real and simul
 ($RealPairLevenshteinDistance - SimulatedPairLevenshteinDistance$) and the effect of semantic similarity on
 phonological similarity.
 
-Specifically, we examined the effect of Wordnet path similarity on Levenshtein distance in a representative
-lexicon. Because Wordnet is not reliable for comparing semantic similarity across part of speech categories,
-we focused on nouns and restricted the analysis to 4-phone words. Figure \ref{sem_sim} shows the average
-difference between the real lexicon Levenshtein distance and the matched pair Levenshtein distance (from a
-representative CV and phonotactically matched generative model) on the y-axis. The x-axis is Wordnet semantic
-similarity. Closely semantically related words are likely to have a smaller Levenshtein distance than two
-
-One class of words that one might expect should be particularly phonetically distinct is antonyms, like
-\textit{hot} and \textit{cold}. Words in such pairs can typically occur in the same linguistic context but
-have critically different meanings. In a study of antonyms pairs drawn from Wordnet and restricted to be
-mono-morphemic using CELEX, we found that a word is on average more phonetically similar (using Levenshtein
-distance) to its antonym than to a random word that is not its antonym. For 43 antonym adjective pairs (86
-unique words), the mean Levenshtein distance between a word and its antonym was 3.70 compared to a mean
-distance of 4.10 between a word and one of the remaining 84 words ($t = 2.26$, $p < .05$).
 
 \section{Discussion}
 

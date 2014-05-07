@@ -1,0 +1,16 @@
+% latex table generated in R 3.0.2 by xtable 1.7-3 package
+% Mon May  5 18:04:36 2014
+\begin{table}[ht]
+\centering
+\begin{tabular}{rlrrrrr}
+  \hline
+ & variable & 3  letters & 4  letters & 5  letters & 6  letters & 7  letters \\ 
+  \hline
+1 & cor.minpairs.frequency (minus prob).p & 0.47 & 0.47 & 0.70 & 0.74 & 0.79 \\ 
+  2 & cor.neighbors.frequency (minus prob).p & 0.53 & 0.65 & 0.89 & 0.97 & 0.94 \\ 
+  3 & cor.prob.frequency (minus neighbors).p & 0.92 & 0.97 & 0.97 & 0.91 & 0.94 \\ 
+  4 & cor.prob.minpairs.p & 0.98 & 0.97 & 0.89 & 0.64 & 0.51 \\ 
+  5 & cor.prob.neighbors.p & 1.00 & 1.00 & 1.00 & 0.97 & 0.99 \\ 
+   \hline
+\end{tabular}
+\end{table}

@@ -1,0 +1,87 @@
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2013.7.28)  5 MAY 2014 18:21
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**\input tables.tex
+(./tables.tex (/usr/local/texlive/2011/texmf-dist/tex/latex/base/article.cls
+Document Class: article 2007/10/19 v1.4h Standard LaTeX document class
+(/usr/local/texlive/2011/texmf-dist/tex/latex/base/size11.clo
+File: size11.clo 2007/10/19 v1.4h Standard LaTeX file (size option)
+)
+\c@part=\count79
+\c@section=\count80
+\c@subsection=\count81
+\c@subsubsection=\count82
+\c@paragraph=\count83
+\c@subparagraph=\count84
+\c@figure=\count85
+\c@table=\count86
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\bibindent=\dimen102
+) (./tables.aux)
+\openout1 = `tables.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 7.
+LaTeX Font Info:    ... okay on input line 7.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 7.
+LaTeX Font Info:    ... okay on input line 7.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 7.
+LaTeX Font Info:    ... okay on input line 7.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 7.
+LaTeX Font Info:    ... okay on input line 7.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 7.
+LaTeX Font Info:    ... okay on input line 7.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 7.
+LaTeX Font Info:    ... okay on input line 7.
+
+(../pct_positive.txt
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <10.95> on input line 5.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <8> on input line 5.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <6> on input line 5.
+
+Overfull \hbox (36.98796pt too wide) in paragraph at lines 5--14
+ [][] 
+ []
+
+) (../pcor_positive.txt
+Overfull \hbox (103.08345pt too wide) in paragraph at lines 5--14
+ [][] 
+ []
+
+) (../pct_sig_pcor.txt
+Overfull \hbox (112.20847pt too wide) in paragraph at lines 5--16
+ [][] 
+ []
+
+) (../pct_sig.txt
+Overfull \hbox (45.20045pt too wide) in paragraph at lines 5--16
+ [][] 
+ []
+
+)
+No file tables.bbl.
+[1
+
+{/usr/local/texlive/2011/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
+[2] (./tables.aux) ) 
+Here is how much of TeX's memory you used:
+ 234 strings out of 493610
+ 2566 string characters out of 3142404
+ 56291 words of memory out of 3000000
+ 3608 multiletter control sequences out of 15000+200000
+ 6379 words of font info for 23 fonts, out of 3000000 for 9000
+ 831 hyphenation exceptions out of 8191
+ 21i,7n,19p,144b,188s stack positions out of 5000i,500n,10000p,200000b,50000s
+</usr/local/texlive/2011/texmf-dist/fonts/type1/public/amsf
+onts/cm/cmr10.pfb>
+Output written on tables.pdf (2 pages, 17665 bytes).
+PDF statistics:
+ 15 PDF objects out of 1000 (max. 8388607)
+ 9 compressed objects within 1 object stream
+ 0 named destinations out of 1000 (max. 500000)
+ 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+
